@@ -29,10 +29,13 @@ class InputSystem(System):
                 if event.key == pygame.K_l:
                     game_state.toggle_look_mode()
                     return
+                elif event.key == pygame.K_i:
+                    game_state.toggle_inventory()
+                    return
 
                 if game_state.look_mode:
                     self.handle_look_input(event, game_state)
-                else:
+                elif not game_state.show_inventory:  # Don't process movement when inventory is open
                     if event.key in [pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT]:
                         self.handle_player_movement(event, player_id)
                     elif event.key == pygame.K_g:
@@ -182,10 +185,21 @@ class RenderSystem(System):
         self.screen = screen
         self.font = font
         self.tile_size = tile_size
+        self.inventory_width = 300
+        self.inventory_slide_amount = 0
+        self.inventory_slide_speed = 20
 
     def update(self, *args, **kwargs):
         game_state = kwargs.get('game_state')
         self.screen.fill((0, 0, 0))
+
+        # Update inventory slide animation
+        if game_state and game_state.show_inventory:
+            if self.inventory_slide_amount < self.inventory_width:
+                self.inventory_slide_amount = min(self.inventory_slide_amount + self.inventory_slide_speed, self.inventory_width)
+        else:
+            if self.inventory_slide_amount > 0:
+                self.inventory_slide_amount = max(self.inventory_slide_amount - self.inventory_slide_speed, 0)
 
         # Draw entities
         entities_to_render = self.world.get_entities_with_components(PositionComponent, RenderableComponent)
@@ -206,6 +220,10 @@ class RenderSystem(System):
         # Draw game messages
         if game_state:
             self.draw_messages(game_state)
+
+        # Draw inventory sidebar
+        if game_state and self.inventory_slide_amount > 0:
+            self.draw_inventory(game_state)
 
     def draw_cursor_and_description(self, game_state):
         cursor_id = game_state.cursor_id
@@ -232,7 +250,6 @@ class RenderSystem(System):
                 desc_rect = desc_surface.get_rect(centerx=self.screen.get_width() / 2, y=self.screen.get_height() - 40)
                 self.screen.blit(desc_surface, desc_rect)
 
-
     def draw_messages(self, game_state):
         y_offset = self.screen.get_height() - 20
         # Iterate over the last 5 messages, starting from the most recent.
@@ -242,3 +259,78 @@ class RenderSystem(System):
             msg_rect = msg_surface.get_rect(centerx=self.screen.get_width() / 2, bottom=y_offset)
             self.screen.blit(msg_surface, msg_rect)
             y_offset -= 20 # Move up for the next message
+
+    def draw_inventory(self, game_state):
+        # Get player entity
+        player_entities = self.world.get_entities_with_components(PlayerControllableComponent)
+        if not player_entities: return
+        player_id = player_entities[0]
+        
+        inventory = self.world.get_component(player_id, InventoryComponent)
+        if not inventory: return
+
+        # Draw semi-transparent background
+        inventory_x = self.screen.get_width() - self.inventory_slide_amount
+        inventory_rect = pygame.Rect(inventory_x, 0, self.inventory_width, self.screen.get_height())
+        
+        # Draw background
+        bg_surface = pygame.Surface((self.inventory_width, self.screen.get_height()))
+        bg_surface.set_alpha(230)
+        bg_surface.fill((20, 20, 20))
+        self.screen.blit(bg_surface, (inventory_x, 0))
+        
+        # Draw border
+        pygame.draw.rect(self.screen, (100, 100, 100), inventory_rect, 2)
+        
+        # Draw title
+        title_surface = self.font.render("INVENTORY", True, (255, 255, 255))
+        title_rect = title_surface.get_rect(centerx=inventory_x + self.inventory_width // 2, y=20)
+        self.screen.blit(title_surface, title_rect)
+        
+        # Draw separator line
+        pygame.draw.line(self.screen, (100, 100, 100), 
+                        (inventory_x + 10, 50), 
+                        (inventory_x + self.inventory_width - 10, 50), 2)
+        
+        # Draw inventory items
+        y_offset = 70
+        if not inventory.items:
+            empty_surface = self.font.render("(empty)", True, (150, 150, 150))
+            empty_rect = empty_surface.get_rect(centerx=inventory_x + self.inventory_width // 2, y=y_offset)
+            self.screen.blit(empty_surface, empty_rect)
+        else:
+            for item_id in inventory.items:
+                # Get item components
+                desc = self.world.get_component(item_id, DescriptionComponent)
+                renderable = self.world.get_component(item_id, RenderableComponent)
+                
+                if desc and renderable:
+                    # Draw item character
+                    char_surface = self.font.render(renderable.char, True, renderable.color)
+                    self.screen.blit(char_surface, (inventory_x + 20, y_offset))
+                    
+                    # Draw item description (truncate if too long)
+                    text = desc.text
+                    if len(text) > 25:
+                        text = text[:22] + "..."
+                    text_surface = self.font.render(text, True, (255, 255, 255))
+                    self.screen.blit(text_surface, (inventory_x + 50, y_offset))
+                    
+                    # Check if it's a key and show key_id
+                    key_comp = self.world.get_component(item_id, KeyComponent)
+                    if key_comp and key_comp.key_id:
+                        key_info = f"[Key: {key_comp.key_id[:8]}...]"
+                        key_surface = self.font.render(key_info, True, (150, 150, 150))
+                        self.screen.blit(key_surface, (inventory_x + 50, y_offset + 20))
+                        y_offset += 20
+                    
+                    y_offset += 30
+        
+        # Draw instructions at bottom
+        instructions = ["Press 'I' to close"]
+        y_offset = self.screen.get_height() - 60
+        for instruction in instructions:
+            inst_surface = self.font.render(instruction, True, (200, 200, 200))
+            inst_rect = inst_surface.get_rect(centerx=inventory_x + self.inventory_width // 2, y=y_offset)
+            self.screen.blit(inst_surface, inst_rect)
+            y_offset += 25

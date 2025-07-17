@@ -10,5 +10,12 @@
   },
   "wood": {
     "hardness": 4
+  },
+  "silver": {
+    "hardness": 4
+  },
+  "brass": {
+    "hardness": 4
   }
+
 }

@@ -99,6 +99,7 @@ class Game:
         self.COLORS = {"BLACK": (0,0,0), "WHITE": (255,255,255), "GREEN": (0,255,0), "YELLOW": (255,255,0)}
         self.fullscreen = False
         self.look_mode = False
+        self.show_inventory = False
         self.cursor_id = None
         self.message_log = []
         self.screen = pygame.display.set_mode((self.WINDOW_WIDTH, self.WINDOW_HEIGHT), pygame.RESIZABLE)
@@ -200,16 +201,9 @@ class Game:
 
     def setup(self):
         """Load all game data and initialize systems."""
-        # Load base archetypes
+        # Load base archetypes (now includes all templates)
         self.world.archetypes = self.load_json_file('archetypes.json') or {}
         
-        # Load specific templates and merge them into the main archetypes catalog
-        container_templates = self.load_json_file('containers.json') or {}
-        self.world.archetypes.update(container_templates)
-        
-        item_templates = self.load_json_file('item_templates.json') or {}
-        self.world.archetypes.update(item_templates)
-
         # Load materials
         self.world.materials = self.load_json_file('materials.json') or {}
         
@@ -221,8 +215,15 @@ class Game:
         if items_data: self.create_entities_from_definitions(items_data["entities"])
         
         # Use the factory to create procedural content
-        factory.create_locked_container_and_key(self, 'Wooden Chest', 'Silver Key', container_pos=(10, 10), key_pos=(18, 14))
-        factory.create_locked_container_and_key(self, 'Steel Chest', 'Iron Key', container_pos=(14, 8), key_pos=(3, 3))
+        # Now using base archetypes with material overrides
+        factory.create_locked_container_and_key(self, container_pos=(10, 10), key_pos=(16, 12), 
+                                               container_material="wood", key_material="silver")
+        factory.create_locked_container_and_key(self, container_pos=(14, 8), key_pos=(5, 3), 
+                                               container_material="steel", key_material="steel")
+        
+        # Create a locked door with a brass key
+        factory.create_locked_door_with_key(self, door_pos=(15, 5), key_pos=(2, 2), 
+                                           door_material="wood", key_material="brass")
 
         # Initialize systems
         self.world.add_system(InputSystem(self.world))
@@ -243,6 +244,7 @@ class Game:
     def toggle_look_mode(self):
         self.look_mode = not self.look_mode
         if self.look_mode:
+            self.show_inventory = False  # Close inventory when entering look mode
             player_entities = self.world.get_entities_with_components(components.PlayerControllableComponent)
             if player_entities:
                 player_id = player_entities[0]
@@ -250,6 +252,12 @@ class Game:
                 cursor_pos = self.world.get_component(self.cursor_id, components.PositionComponent)
                 cursor_pos.x, cursor_pos.y = player_pos.x, player_pos.y
         print(f"Look mode: {'ON' if self.look_mode else 'OFF'}")
+
+    def toggle_inventory(self):
+        self.show_inventory = not self.show_inventory
+        if self.show_inventory:
+            self.look_mode = False  # Close look mode when opening inventory
+        print(f"Inventory: {'OPEN' if self.show_inventory else 'CLOSED'}")
 
     def run(self):
         running = True
@@ -267,6 +275,7 @@ class Game:
                             if isinstance(system, RenderSystem): system.screen = self.screen
                     elif event.key == pygame.K_ESCAPE:
                         if self.look_mode: self.toggle_look_mode()
+                        elif self.show_inventory: self.toggle_inventory()
                         else: running = False
             
             self.world.update(events=events, game_state=self)
