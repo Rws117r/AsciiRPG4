@@ -40,20 +40,29 @@ class CursorComponent(Component):
 
 class StatsComponent(Component):
     """Stores the core ability scores of an entity."""
-    def __init__(self, strength, intelligence, wisdom, dexterity, constitution, charisma):
+    def __init__(self, strength, intelligence, wisdom, dexterity, constitution, charisma, 
+                 save_death=16, save_wands=16, save_paralysis=16, save_breath=16, save_spells=16):
         self.strength = strength
         self.intelligence = intelligence
         self.wisdom = wisdom
         self.dexterity = dexterity
         self.constitution = constitution
         self.charisma = charisma
+        # Saving Throws
+        self.save_death = save_death
+        self.save_wands = save_wands
+        self.save_paralysis = save_paralysis
+        self.save_breath = save_breath
+        self.save_spells = save_spells
 
 class CombatComponent(Component):
     """Stores combat-related stats for an entity."""
-    def __init__(self, hp, ac, thac0):
+    def __init__(self, hp, ac, thac0, max_hp=None, xp_value=0):
         self.hp = hp
+        self.max_hp = max_hp if max_hp is not None else hp
         self.ac = ac
         self.thac0 = thac0
+        self.xp_value = xp_value
 
 class CanEquipComponent(Component):
     """A tag component for entities that can equip items."""
@@ -152,6 +161,7 @@ class StateComponent(Component):
     """Stores state flags and temporary modifiers for an entity."""
     def __init__(self):
         # State flags
+        self.dead = False
         self.paralyzed = False
         self.blinded = False
         self.charmed = False
@@ -192,3 +202,30 @@ class WantsToTriggerAbilityComponent(Component):
         self.ability_id = ability_id
         self.target_id = target_id
         self.trigger_type = trigger_type
+
+class WantsToMakeSavingThrowComponent(Component):
+    """Intent for an entity to make a saving throw against an effect."""
+    def __init__(self, save_type, dc, effect_data, source_entity_id):
+        self.save_type = save_type
+        self.dc = dc
+        self.effect_data = effect_data
+        self.source_entity_id = source_entity_id
+
+class DeadComponent(Component):
+    """A tag component for dead entities, to prevent them from being targeted."""
+    pass
+
+class ExperienceComponent(Component):
+    """Stores experience and level information for an entity."""
+    def __init__(self, current_xp=0, level=1):
+        self.current_xp = current_xp
+        self.level = level
+        self.xp_to_next_level = self.calculate_xp_needed(level + 1)
+
+    def calculate_xp_needed(self, for_level):
+        """
+        Calculates XP needed for a given level (based on OSE Fighter progression).
+        e.g., Level 2: 2,000, Level 3: 4,000, etc.
+        """
+        if for_level <= 1: return 0
+        return 2000 * (2 ** (for_level - 2))

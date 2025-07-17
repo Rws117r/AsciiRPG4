@@ -9,7 +9,7 @@ import copy
 import random
 import components
 import factory
-from systems import InputSystem, MovementSystem, RenderSystem, ActionSystem, CombatSystem, AISystem, StatusEffectSystem
+from systems import InputSystem, MovementSystem, RenderSystem, ActionSystem, CombatSystem, AISystem, StatusEffectSystem, SavingThrowSystem
 
 # --- Core ECS Classes ---
 class Entity:
@@ -112,7 +112,7 @@ class Game:
         self.cursor_id = None
         self.message_log = []
         # Turn-based system attributes
-        self.game_state = 'PLAYER_TURN'  # Can be 'PLAYER_TURN' or 'MONSTER_TURN'
+        self.game_state = 'PLAYER_TURN'  # Can be 'PLAYER_TURN', 'MONSTER_TURN', or 'GAME_OVER'
         self.player_acted = False  # Track if player has acted this turn
         self.screen = pygame.display.set_mode((self.WINDOW_WIDTH, self.WINDOW_HEIGHT), pygame.RESIZABLE)
         pygame.display.set_caption("ASCII Roguelike")
@@ -122,7 +122,7 @@ class Game:
 
     def add_message(self, message):
         self.message_log.append(message)
-        if len(self.message_log) > 5:
+        if len(self.message_log) > 10:  # Increased message history
             self.message_log.pop(0)
 
     def load_font(self):
@@ -246,12 +246,17 @@ class Game:
         self.world.add_system(InputSystem(self.world))
         self.world.add_system(MovementSystem(self.world))
         self.world.add_system(ActionSystem(self.world))
+        self.world.add_system(SavingThrowSystem(self.world))  # Add saving throw system
         self.world.add_system(AISystem(self.world))
         self.world.add_system(CombatSystem(self.world))
         self.world.add_system(StatusEffectSystem(self.world))  # Add status effect system
         self.world.add_system(RenderSystem(self.world, self.screen, self.font, self.TILE_SIZE))
         
         self.create_cursor()
+        
+        # Welcome message
+        self.add_message("Welcome to the dungeon! Use arrow keys to move, 'g' to get items, 'a' to attack.")
+        self.add_message("Press 'l' for look mode, 'i' for inventory. Good luck!")
 
     def create_cursor(self):
         """Creates the look cursor entity."""
@@ -278,6 +283,20 @@ class Game:
         if self.show_inventory:
             self.look_mode = False  # Close look mode when opening inventory
         print(f"Inventory: {'OPEN' if self.show_inventory else 'CLOSED'}")
+
+    def check_player_death(self):
+        """Check if the player has died and handle game over."""
+        player_entities = self.world.get_entities_with_components(components.PlayerControllableComponent)
+        if not player_entities:
+            return
+        
+        player_id = player_entities[0]
+        state = self.world.get_component(player_id, components.StateComponent)
+        
+        if state and state.dead:
+            self.game_state = 'GAME_OVER'
+            self.add_message("=== GAME OVER ===")
+            self.add_message("Press ESC to exit or R to restart (not implemented)")
 
     def run(self):
         running = True
@@ -312,8 +331,9 @@ class Game:
                 
                 # Check if player performed an action that ends their turn
                 if self.player_acted:
-                    self.game_state = 'MONSTER_TURN'
-                    self.add_message("--- Monster Turn ---")
+                    self.check_player_death()
+                    if self.game_state != 'GAME_OVER':
+                        self.game_state = 'MONSTER_TURN'
             
             elif self.game_state == 'MONSTER_TURN':
                 # Process monster actions
@@ -321,7 +341,14 @@ class Game:
                 
                 # After monsters act, return to player turn
                 self.game_state = 'PLAYER_TURN'
-                self.add_message("--- Player Turn ---")
+            
+            elif self.game_state == 'GAME_OVER':
+                # Handle game over state
+                for event in events:
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_r:
+                            # TODO: Implement restart functionality
+                            self.add_message("Restart not implemented yet!")
             
             # Always update rendering
             render_system = self.world.get_system(RenderSystem)

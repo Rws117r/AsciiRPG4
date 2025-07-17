@@ -32,7 +32,7 @@ class InputSystem(System):
 
         # Check if player is affected by status effects that prevent action
         state = self.world.get_component(player_id, StateComponent)
-        if state and (state.paralyzed or state.petrified or state.unconscious or state.stunned):
+        if state and (state.paralyzed or state.petrified or state.unconscious or state.stunned or state.dead):
             return  # Player cannot act
 
         for event in events:
@@ -110,6 +110,12 @@ class InputSystem(System):
             target_id = self.world.get_entity_at_position(x, y)
             if target_id:
                 target_faction = self.world.get_component(target_id, FactionComponent)
+                target_state = self.world.get_component(target_id, StateComponent)
+                
+                # Don't attack dead entities
+                if target_state and target_state.dead:
+                    continue
+                    
                 if target_faction and target_faction.name == "monsters":
                     # Found a monster, create an attack intent
                     self.world.add_component(player_id, WantsToAttackComponent(target_id))
@@ -235,6 +241,69 @@ class ActionSystem(System):
         if renderable and renderable.open_char:
             renderable.char = renderable.open_char
 
+class SavingThrowSystem(System):
+    """Handles saving throws against various effects."""
+    
+    def update(self, *args, **kwargs):
+        game_state = kwargs.get('game_state')
+        
+        for entity_id in self.world.get_entities_with_components(WantsToMakeSavingThrowComponent):
+            save_intent = self.world.get_component(entity_id, WantsToMakeSavingThrowComponent)
+            stats = self.world.get_component(entity_id, StatsComponent)
+            state = self.world.get_component(entity_id, StateComponent)
+            
+            if not stats:
+                # Can't make saves without stats
+                self.world.remove_component(entity_id, WantsToMakeSavingThrowComponent)
+                continue
+            
+            # Get the appropriate save value
+            save_value = 20  # Default
+            if save_intent.save_type == "death":
+                save_value = stats.save_death
+            elif save_intent.save_type == "wands":
+                save_value = stats.save_wands
+            elif save_intent.save_type == "paralysis":
+                save_value = stats.save_paralysis
+            elif save_intent.save_type == "breath":
+                save_value = stats.save_breath
+            elif save_intent.save_type == "spells":
+                save_value = stats.save_spells
+            
+            # Apply save penalty from status effects
+            if state:
+                save_value += state.save_penalty
+            
+            # Roll the save
+            save_roll = random.randint(1, 20)
+            save_successful = save_roll >= save_value
+            
+            # Generate message
+            entity_name = "You" if self.world.get_component(entity_id, PlayerControllableComponent) else None
+            if not entity_name:
+                desc = self.world.get_component(entity_id, DescriptionComponent)
+                entity_name = f"The {desc.text}" if desc else "The creature"
+            
+            if save_successful:
+                if entity_name == "You":
+                    game_state.add_message(f"You resist the effect! (rolled {save_roll}, needed {save_value})")
+                else:
+                    game_state.add_message(f"{entity_name} resists the effect!")
+            else:
+                if entity_name == "You":
+                    game_state.add_message(f"You fail to resist! (rolled {save_roll}, needed {save_value})")
+                else:
+                    game_state.add_message(f"{entity_name} fails to resist!")
+                
+                # Apply the effect if save failed
+                if save_intent.effect_data:
+                    self.world.add_component(entity_id, WantsToApplyStatusComponent(
+                        status_effect_data=save_intent.effect_data,
+                        source_entity_id=save_intent.source_entity_id
+                    ))
+            
+            self.world.remove_component(entity_id, WantsToMakeSavingThrowComponent)
+
 class CombatSystem(System):
     """Handles combat between entities."""
     def update(self, *args, **kwargs):
@@ -255,7 +324,8 @@ class CombatSystem(System):
                 continue
 
             # Skip if target is already dead
-            if defender_combat.hp <= 0:
+            target_state = self.world.get_component(target_id, StateComponent)
+            if target_state and target_state.dead:
                 self.world.remove_component(attacker_id, WantsToAttackComponent)
                 continue
 
@@ -276,6 +346,7 @@ class CombatSystem(System):
             attack_roll = random.randint(1, 20)
             hit_ac = attack_thac0 - attack_roll
             
+            # Enhanced combat messaging
             if hit_ac <= defender_combat.ac:
                 # Calculate damage with modifiers
                 base_damage = random.randint(1, 6)  # 1d6 damage for now
@@ -285,13 +356,15 @@ class CombatSystem(System):
                 final_damage = max(1, final_damage)  # Minimum 1 damage
                 
                 defender_combat.hp -= final_damage
-                game_state.add_message(f"{attacker_name} hit {defender_name} for {final_damage} damage!")
+                
+                # Enhanced hit message
+                game_state.add_message(f"{attacker_name} attack{'' if attacker_name == 'You' else 's'} {defender_name} and roll{'' if attacker_name == 'You' else 's'} a {attack_roll}, hitting for {final_damage} damage!")
 
                 if defender_combat.hp <= 0:
-                    game_state.add_message(f"The {defender_desc.text} dies!")
-                    defender_combat.hp = 0
+                    # Handle death
+                    self.handle_death(target_id, attacker_id, game_state)
                 else:
-                    # Step 2.1: Check for and trigger abilities after successful attack
+                    # Check for and trigger abilities after successful attack
                     abilities_comp = self.world.get_component(attacker_id, AbilitiesComponent)
                     if abilities_comp:
                         for ability_id in abilities_comp.abilities:
@@ -301,17 +374,113 @@ class CombatSystem(System):
                                     # Roll for chance
                                     chance = ability_data.get("chance", 0.0)
                                     if random.random() <= chance:
-                                        # Trigger the ability
+                                        # Check if the effect allows a saving throw
                                         status_effect = ability_data.get("status_effect")
                                         if status_effect:
-                                            self.world.add_component(target_id, WantsToApplyStatusComponent(
-                                                status_effect_data=status_effect,
-                                                source_entity_id=attacker_id
-                                            ))
+                                            save_type = self.get_save_type_for_effect(status_effect.get("id"))
+                                            if save_type:
+                                                # Create saving throw intent
+                                                self.world.add_component(target_id, WantsToMakeSavingThrowComponent(
+                                                    save_type=save_type,
+                                                    dc=15,  # Default DC, could be customized
+                                                    effect_data=status_effect,
+                                                    source_entity_id=attacker_id
+                                                ))
+                                            else:
+                                                # No save allowed, apply directly
+                                                self.world.add_component(target_id, WantsToApplyStatusComponent(
+                                                    status_effect_data=status_effect,
+                                                    source_entity_id=attacker_id
+                                                ))
             else:
-                game_state.add_message(f"{attacker_name} missed {defender_name}.")
+                # Enhanced miss message
+                game_state.add_message(f"{attacker_name} attack{'' if attacker_name == 'You' else 's'} {defender_name} and roll{'' if attacker_name == 'You' else 's'} a {attack_roll}, but miss{'!' if attacker_name == 'You' else 'es!'}")
 
             self.world.remove_component(attacker_id, WantsToAttackComponent)
+
+    def get_save_type_for_effect(self, effect_id):
+        """Determine the appropriate saving throw type for an effect."""
+        # Map status effects to appropriate saves
+        save_mapping = {
+            "paralysis": "paralysis",
+            "petrification": "spells",
+            "charm": "spells",
+            "confusion": "spells",
+            "blindness": "spells",
+            "disease_mummy_rot": "death",
+            "disease_generic": "death",
+            "energy_drain_1": "death",
+            "energy_drain_2": "death",
+            "poison_lethal": "death",
+            "poison_sickness": "death",
+            # Some effects don't allow saves
+            "ability_drain_strength": None,
+            "ability_drain_wisdom": None,
+            "ability_drain_charisma": None,
+        }
+        return save_mapping.get(effect_id, "spells")  # Default to spells save
+
+    def handle_death(self, dead_entity_id, killer_id, game_state):
+        """Handle entity death, XP rewards, and cleanup."""
+        defender_desc = self.world.get_component(dead_entity_id, DescriptionComponent)
+        defender_combat = self.world.get_component(dead_entity_id, CombatComponent)
+        
+        # Mark as dead
+        state = self.world.get_component(dead_entity_id, StateComponent)
+        if not state:
+            state = StateComponent()
+            self.world.add_component(dead_entity_id, state)
+        state.dead = True
+        
+        # Add dead component for easy identification
+        self.world.add_component(dead_entity_id, DeadComponent())
+        
+        # Award XP if the killer is the player
+        if self.world.get_component(killer_id, PlayerControllableComponent):
+            xp_comp = self.world.get_component(killer_id, ExperienceComponent)
+            if not xp_comp:
+                xp_comp = ExperienceComponent()
+                self.world.add_component(killer_id, xp_comp)
+            
+            if defender_combat and defender_combat.xp_value > 0:
+                old_xp = xp_comp.current_xp
+                xp_comp.current_xp += defender_combat.xp_value
+                game_state.add_message(f"You gain {defender_combat.xp_value} experience points!")
+                
+                # Check for level up
+                if xp_comp.current_xp >= xp_comp.xp_to_next_level:
+                    self.handle_level_up(killer_id, xp_comp, game_state)
+        
+        # Death message
+        entity_name = "You" if self.world.get_component(dead_entity_id, PlayerControllableComponent) else f"The {defender_desc.text}"
+        if self.world.get_component(dead_entity_id, PlayerControllableComponent):
+            game_state.add_message("You have died! Game Over.")
+            # TODO: Handle player death (restart, etc.)
+        else:
+            game_state.add_message(f"{entity_name} dies!")
+        
+        # Change appearance to corpse
+        renderable = self.world.get_component(dead_entity_id, RenderableComponent)
+        if renderable:
+            renderable.char = '%'
+            renderable.color = (100, 100, 100)  # Gray corpse
+
+    def handle_level_up(self, entity_id, xp_comp, game_state):
+        """Handle leveling up."""
+        old_level = xp_comp.level
+        xp_comp.level += 1
+        xp_comp.xp_to_next_level = xp_comp.calculate_xp_needed(xp_comp.level + 1)
+        
+        # Increase HP
+        combat = self.world.get_component(entity_id, CombatComponent)
+        if combat:
+            hp_gain = random.randint(1, 6)  # 1d6 HP per level
+            combat.max_hp += hp_gain
+            combat.hp += hp_gain  # Heal to full on level up
+        
+        game_state.add_message(f"Congratulations! You reached level {xp_comp.level}!")
+        if combat:
+            game_state.add_message(f"You gain {hp_gain} hit points!")
 
 
 class StatusEffectSystem(System):
@@ -320,7 +489,7 @@ class StatusEffectSystem(System):
     def update(self, *args, **kwargs):
         game_state = kwargs.get('game_state')
         
-        # Step 2.2: Apply new status effects
+        # Apply new status effects
         self.apply_new_status_effects(game_state)
         
         # Update existing status effects (reduce duration, check for expiry)
@@ -543,18 +712,16 @@ class RenderSystem(System):
 
             if self.world.get_component(entity_id, CursorComponent): continue
 
-            # Don't render dead creatures
-            combat = self.world.get_component(entity_id, CombatComponent)
-            if combat and combat.hp <= 0:
-                continue
-
             renderable = self.world.get_component(entity_id, RenderableComponent)
             
             # Modify color based on status effects
             color = renderable.color
             state = self.world.get_component(entity_id, StateComponent)
             if state:
-                if state.paralyzed or state.petrified:
+                if state.dead:
+                    # Dead entities are already handled by death system (gray corpse)
+                    color = renderable.color
+                elif state.paralyzed or state.petrified:
                     color = (128, 128, 128)  # Gray for paralyzed/petrified
                 elif state.confused:
                     color = (255, 0, 255)    # Magenta for confused
@@ -575,6 +742,10 @@ class RenderSystem(System):
         # Draw inventory sidebar
         if game_state and self.inventory_slide_amount > 0:
             self.draw_inventory(game_state)
+        
+        # Draw status information
+        if game_state:
+            self.draw_status_info(game_state)
 
     def draw_cursor_and_description(self, game_state):
         cursor_id = game_state.cursor_id
@@ -594,6 +765,7 @@ class RenderSystem(System):
         if entity_id:
             desc = self.world.get_component(entity_id, DescriptionComponent)
             material = self.world.get_component(entity_id, MaterialComponent)
+            combat = self.world.get_component(entity_id, CombatComponent)
             
             # Add status effect info to description
             status_info = ""
@@ -602,8 +774,13 @@ class RenderSystem(System):
                 status_names = [effect["name"] for effect in status_effects_comp.effects]
                 status_info = f" [{', '.join(status_names)}]"
             
+            # Add HP info for living creatures
+            hp_info = ""
+            if combat and not self.world.get_component(entity_id, DeadComponent):
+                hp_info = f" (HP: {combat.hp}/{combat.max_hp})"
+            
             if desc:
-                description_text = desc.text.format(material=material.name if material else "unknown") + status_info
+                description_text = desc.text.format(material=material.name if material else "unknown") + status_info + hp_info
                 description_surface = self.font.render(description_text, True, (255, 255, 255))
                 description_rect = description_surface.get_rect(centerx=self.screen.get_width() // 2, y=self.screen.get_height() - 40)
                 self.screen.blit(description_surface, description_rect)
@@ -615,6 +792,53 @@ class RenderSystem(System):
             msg_rect = msg_surface.get_rect(centerx=self.screen.get_width() / 2, bottom=y_offset)
             self.screen.blit(msg_surface, msg_rect)
             y_offset -= 20
+
+    def draw_status_info(self, game_state):
+        """Draw player status information in the top-left corner."""
+        player_entities = self.world.get_entities_with_components(PlayerControllableComponent)
+        if not player_entities: return
+        player_id = player_entities[0]
+        
+        combat = self.world.get_component(player_id, CombatComponent)
+        xp_comp = self.world.get_component(player_id, ExperienceComponent)
+        status_effects_comp = self.world.get_component(player_id, StatusEffectsComponent)
+        
+        y_offset = 10
+        
+        # HP
+        if combat:
+            hp_text = f"HP: {combat.hp}/{combat.max_hp}"
+            hp_surface = self.font.render(hp_text, True, (255, 255, 255))
+            self.screen.blit(hp_surface, (10, y_offset))
+            y_offset += 25
+        
+        # Level and XP
+        if xp_comp:
+            level_text = f"Level: {xp_comp.level}"
+            level_surface = self.font.render(level_text, True, (255, 255, 255))
+            self.screen.blit(level_surface, (10, y_offset))
+            y_offset += 20
+            
+            xp_text = f"XP: {xp_comp.current_xp}/{xp_comp.xp_to_next_level}"
+            xp_surface = self.font.render(xp_text, True, (255, 255, 255))
+            self.screen.blit(xp_surface, (10, y_offset))
+            y_offset += 25
+        
+        # Active status effects
+        if status_effects_comp and status_effects_comp.effects:
+            effects_text = "Status:"
+            effects_surface = self.font.render(effects_text, True, (255, 255, 255))
+            self.screen.blit(effects_surface, (10, y_offset))
+            y_offset += 20
+            
+            for effect in status_effects_comp.effects:
+                duration_text = ""
+                if effect["type"] == "temporary":
+                    duration_text = f" ({effect['turns_remaining']})"
+                effect_text = f"  {effect['name']}{duration_text}"
+                effect_surface = self.font.render(effect_text, True, (255, 255, 0))
+                self.screen.blit(effect_surface, (10, y_offset))
+                y_offset += 20
 
     def draw_inventory(self, game_state):
         # Get player entity
@@ -711,12 +935,11 @@ class AISystem(System):
                 continue  # Only control monsters
             
             # Skip dead monsters
-            combat = self.world.get_component(entity_id, CombatComponent)
-            if combat.hp <= 0:
+            state = self.world.get_component(entity_id, StateComponent)
+            if state and state.dead:
                 continue
 
-            # Step 2.3: Check for status effects that prevent action
-            state = self.world.get_component(entity_id, StateComponent)
+            # Check for status effects that prevent action
             if state and (state.paralyzed or state.petrified or state.unconscious or state.stunned):
                 continue  # Monster cannot act
 

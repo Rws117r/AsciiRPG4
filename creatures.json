@@ -8,10 +8,23 @@
         "RenderableComponent": { "char": "@", "color": "WHITE" },
         "PlayerControllableComponent": {},
         "DescriptionComponent": { "text": "This is you, the brave adventurer." },
-        "StatsComponent": { "strength": 13, "intelligence": 12, "wisdom": 10, "dexterity": 14, "constitution": 15, "charisma": 9 },
-        "CombatComponent": { "hp": 8, "ac": 7, "thac0": 19 },
+        "StatsComponent": { 
+          "strength": 13, 
+          "intelligence": 12, 
+          "wisdom": 10, 
+          "dexterity": 14, 
+          "constitution": 15, 
+          "charisma": 9,
+          "save_death": 15,
+          "save_wands": 16,
+          "save_paralysis": 14,
+          "save_breath": 17,
+          "save_spells": 15
+        },
+        "CombatComponent": { "hp": 8, "ac": 7, "thac0": 19, "max_hp": 8, "xp_value": 0 },
         "FactionComponent": { "name": "player" },
-        "StateComponent": {}
+        "StateComponent": {},
+        "ExperienceComponent": { "current_xp": 0, "level": 1 }
       }
     },
     {
@@ -21,8 +34,20 @@
         "PositionComponent": { "x": 10, "y": 8 },
         "RenderableComponent": { "char": "g", "color": "GREEN" },
         "DescriptionComponent": { "text": "A foul-smelling, green-skinned goblin." },
-        "StatsComponent": { "strength": 8, "intelligence": 8, "wisdom": 8, "dexterity": 12, "constitution": 9, "charisma": 7 },
-        "CombatComponent": { "hp": 4, "ac": 6, "thac0": 19 },
+        "StatsComponent": { 
+          "strength": 8, 
+          "intelligence": 8, 
+          "wisdom": 8, 
+          "dexterity": 12, 
+          "constitution": 9, 
+          "charisma": 7,
+          "save_death": 16,
+          "save_wands": 17,
+          "save_paralysis": 16,
+          "save_breath": 18,
+          "save_spells": 17
+        },
+        "CombatComponent": { "hp": 4, "ac": 6, "thac0": 19, "max_hp": 4, "xp_value": 5 },
         "FactionComponent": { "name": "monsters" },
         "StateComponent": {}
       }
@@ -34,8 +59,20 @@
         "PositionComponent": { "x": 15, "y": 12 },
         "RenderableComponent": { "char": "Z", "color": "GREEN" },
         "DescriptionComponent": { "text": "A rotting undead creature with paralytic claws." },
-        "StatsComponent": { "strength": 12, "intelligence": 7, "wisdom": 7, "dexterity": 10, "constitution": 11, "charisma": 6 },
-        "CombatComponent": { "hp": 6, "ac": 6, "thac0": 19 },
+        "StatsComponent": { 
+          "strength": 12, 
+          "intelligence": 7, 
+          "wisdom": 7, 
+          "dexterity": 10, 
+          "constitution": 11, 
+          "charisma": 6,
+          "save_death": 12,
+          "save_wands": 13,
+          "save_paralysis": 14,
+          "save_breath": 16,
+          "save_spells": 15
+        },
+        "CombatComponent": { "hp": 6, "ac": 6, "thac0": 19, "max_hp": 6, "xp_value": 15 },
         "FactionComponent": { "name": "monsters" },
         "AbilitiesComponent": { "abilities": ["ghoul_touch"] },
         "StateComponent": {}
@@ -48,10 +85,72 @@
         "PositionComponent": { "x": 7, "y": 15 },
         "RenderableComponent": { "char": "S", "color": "WHITE" },
         "DescriptionComponent": { "text": "A dark, incorporeal shadow that drains strength." },
-        "StatsComponent": { "strength": 14, "intelligence": 6, "wisdom": 12, "dexterity": 14, "constitution": 13, "charisma": 2 },
-        "CombatComponent": { "hp": 8, "ac": 7, "thac0": 17 },
+        "StatsComponent": { 
+          "strength": 14, 
+          "intelligence": 6, 
+          "wisdom": 12, 
+          "dexterity": 14, 
+          "constitution": 13, 
+          "charisma": 2,
+          "save_death": 10,
+          "save_wands": 11,
+          "save_paralysis": 12,
+          "save_breath": 13,
+          "save_spells": 14
+        },
+        "CombatComponent": { "hp": 8, "ac": 7, "thac0": 17, "max_hp": 8, "xp_value": 25 },
         "FactionComponent": { "name": "monsters" },
         "AbilitiesComponent": { "abilities": ["shadow_touch"] },
+        "StateComponent": {}
+      }
+    },
+    {
+      "name": "Orc",
+      "inherits": "Humanoid",
+      "components": {
+        "PositionComponent": { "x": 12, "y": 10 },
+        "RenderableComponent": { "char": "o", "color": "GREEN" },
+        "DescriptionComponent": { "text": "A brutish orc warrior with tusks and crude armor." },
+        "StatsComponent": { 
+          "strength": 15, 
+          "intelligence": 7, 
+          "wisdom": 7, 
+          "dexterity": 10, 
+          "constitution": 14, 
+          "charisma": 6,
+          "save_death": 15,
+          "save_wands": 16,
+          "save_paralysis": 15,
+          "save_breath": 17,
+          "save_spells": 16
+        },
+        "CombatComponent": { "hp": 8, "ac": 6, "thac0": 18, "max_hp": 8, "xp_value": 10 },
+        "FactionComponent": { "name": "monsters" },
+        "StateComponent": {}
+      }
+    },
+    {
+      "name": "Skeleton",
+      "inherits": "Humanoid",
+      "components": {
+        "PositionComponent": { "x": 3, "y": 13 },
+        "RenderableComponent": { "char": "s", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A rattling skeleton animated by dark magic." },
+        "StatsComponent": { 
+          "strength": 10, 
+          "intelligence": 3, 
+          "wisdom": 3, 
+          "dexterity": 12, 
+          "constitution": 10, 
+          "charisma": 1,
+          "save_death": 12,
+          "save_wands": 13,
+          "save_paralysis": 14,
+          "save_breath": 15,
+          "save_spells": 16
+        },
+        "CombatComponent": { "hp": 4, "ac": 7, "thac0": 19, "max_hp": 4, "xp_value": 6 },
+        "FactionComponent": { "name": "monsters" },
         "StateComponent": {}
       }
     }
