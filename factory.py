@@ -18,22 +18,24 @@ def create_locked_container_and_key(game, container_pos, key_pos, container_mate
     # 1. Generate a unique ID for the lock and key pair.
     new_key_id = str(uuid.uuid4())
 
-    # 2. Determine container type based on material
-    container_type = "steel" if container_material == "steel" else "wooden"
-    
-    # 3. Create the locked container using base Container archetype
+    # 2. Create the locked container
+    container_archetype = "Chest"  # Use "Chest" archetype for all chests, regardless of material
+    description = f"A sturdy {container_material} chest."  # Dynamic description
     game.create_entity_from_archetype(
-        archetype_name="Container",
+        archetype_name=container_archetype,
         component_overrides={
             'PositionComponent': {'x': container_pos[0], 'y': container_pos[1]},
             'LockableComponent': {'is_locked': True, 'key_id': new_key_id},
             'MaterialComponent': {'name': container_material},
-            'DescriptionComponent': {'text': f"A {container_type} chest."},
+            'DescriptionComponent': {'text': description},
             'RenderableComponent': {'char': '=', 'color': game.COLORS["WHITE"]}
         }
     )
 
     # 4. Create the matching key using base Key archetype
+    key_archetype = "Key"
+    key_description_text = f"A {key_material} key."
+
     key_description = {
         "steel": "A small iron key.",
         "brass": "A polished brass key.",
@@ -42,12 +44,12 @@ def create_locked_container_and_key(game, container_pos, key_pos, container_mate
     }
     
     game.create_entity_from_archetype(
-        archetype_name="Key",
+        archetype_name=key_archetype,
         component_overrides={
             'PositionComponent': {'x': key_pos[0], 'y': key_pos[1]},
             'KeyComponent': {'key_id': new_key_id},
             'MaterialComponent': {'name': key_material},
-            'DescriptionComponent': {'text': key_description.get(key_material, f"A {key_material} key.")},
+            'DescriptionComponent': {'text': key_description.get(key_material, key_description_text)},
             'RenderableComponent': {'char': "'", 'color': game.COLORS["YELLOW"] if key_material in ["brass", "gold"] else game.COLORS["WHITE"]}
         }
     )
@@ -106,8 +108,7 @@ def create_locked_door_with_key(game, door_pos, key_pos, door_material="wood", k
         component_overrides={
             'PositionComponent': {'x': door_pos[0], 'y': door_pos[1]},
             'LockableComponent': {'is_locked': True, 'key_id': new_key_id},
-            'MaterialComponent': {'name': door_material},
-            'DescriptionComponent': {'text': f"A locked {door_material} door."},
+            'DescriptionComponent': {'text': f"A locked {door_material} door."}, # Assuming description is static for doors
             'RenderableComponent': {'char': '+', 'color': game.COLORS["WHITE"], 'open_char': '-'}
         }
     )

@@ -70,7 +70,8 @@
     "inherits": ["InanimateObject", "Openable"],
     "components": {
         "ContainerComponent": {},
-        "BlocksMovementComponent": {}
+        "BlocksMovementComponent": {},
+        "MaterialComponent": { "name": "wood" }  
     }
   },
   "Lockable": {
@@ -88,7 +89,9 @@
   "Key": {
       "inherits": "Item",
       "components": {
-          "KeyComponent": {}
+          "ItemComponent": {},
+          "KeyComponent": {},
+          "RenderableComponent": { "char": "+", "color": "WHITE" }
       }
   },
   "Padlock": {

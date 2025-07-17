@@ -179,7 +179,7 @@ class Game:
             for comp_name, comp_args in final_components.items():
                 try:
                     comp_class = getattr(components, comp_name)
-                    if comp_name == "RenderableComponent" and "color" in comp_args:
+                    if comp_name == "RenderableComponent" and "color" in comp_args and isinstance(comp_args["color"], str):
                         comp_args["color"] = self.COLORS.get(comp_args["color"].upper(), self.COLORS["WHITE"])
                     component_instance = comp_class(**copy.deepcopy(comp_args))
                     self.world.add_component(entity.id, component_instance)
@@ -203,6 +203,10 @@ class Game:
         """Load all game data and initialize systems."""
         # Load base archetypes (now includes all templates)
         self.world.archetypes = self.load_json_file('archetypes.json') or {}
+        
+        # Load container archetypes and merge them
+        container_archetypes = self.load_json_file('containers.json') or {}
+        self.world.archetypes.update(container_archetypes)
         
         # Load materials
         self.world.materials = self.load_json_file('materials.json') or {}

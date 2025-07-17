@@ -83,6 +83,14 @@ class MovementSystem(System):
             target_x = pos.x + movement.dx
             target_y = pos.y + movement.dy
 
+            # If the moving entity is the cursor, it's not bound by collisions
+            # and can move freely around the map.
+            if self.world.get_component(entity_id, CursorComponent):
+                pos.x = target_x
+                pos.y = target_y
+                self.world.remove_component(entity_id, WantsToMoveComponent)
+                continue # Skip to the next moving entity
+
             target_id = self.world.get_entity_at_position(target_x, target_y)
 
             if target_id and self.world.get_component(target_id, BlocksMovementComponent):
@@ -243,12 +251,14 @@ class RenderSystem(System):
             entity_id = self.world.get_item_at_position(cursor_pos.x, cursor_pos.y)
 
         if entity_id:
-            description = self.world.get_component(entity_id, DescriptionComponent)
-            if description:
-                desc_surface = self.font.render(description.text, True, (255, 255, 255))
-                # Position the description at the bottom center of the screen
-                desc_rect = desc_surface.get_rect(centerx=self.screen.get_width() / 2, y=self.screen.get_height() - 40)
-                self.screen.blit(desc_surface, desc_rect)
+            desc = self.world.get_component(entity_id, DescriptionComponent)
+            material = self.world.get_component(entity_id, MaterialComponent)
+            if desc:
+                description_text = desc.text.format(material=material.name if material else "unknown")
+                description_surface = self.font.render(description_text, True, (255, 255, 255))
+                # Center the description at the bottom of the screen
+                description_rect = description_surface.get_rect(centerx=self.screen.get_width() // 2, y=self.screen.get_height() - 40)
+                self.screen.blit(description_surface, description_rect)
 
     def draw_messages(self, game_state):
         y_offset = self.screen.get_height() - 20
