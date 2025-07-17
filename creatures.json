@@ -1,0 +1,42 @@
+{
+  "entities": [
+    {
+      "name": "Player",
+      "inherits": "Humanoid",
+      "components": {
+        "PositionComponent": { "x": 5, "y": 5 },
+        "RenderableComponent": { "char": "@", "color": "WHITE" },
+        "PlayerControllableComponent": {},
+        "DescriptionComponent": { "text": "This is you, the brave adventurer." },
+        "StatsComponent": { "strength": 13, "intelligence": 12, "wisdom": 10, "dexterity": 14, "constitution": 15, "charisma": 9 },
+        "CombatComponent": { "hp": 8, "ac": 7, "thac0": 19 },
+        "FactionComponent": { "name": "player" },
+        "InventoryComponent": { "items": [] }
+      }
+    },
+    {
+      "name": "Goblin",
+      "inherits": "Humanoid",
+      "components": {
+        "PositionComponent": { "x": 10, "y": 8 },
+        "RenderableComponent": { "char": "g", "color": "GREEN" },
+        "DescriptionComponent": { "text": "A foul-smelling, green-skinned goblin." },
+        "StatsComponent": { "strength": 8, "intelligence": 8, "wisdom": 8, "dexterity": 12, "constitution": 9, "charisma": 7 },
+        "CombatComponent": { "hp": 4, "ac": 6, "thac0": 19 },
+        "FactionComponent": { "name": "monsters" }
+      }
+    },
+    {
+      "name": "Orc",
+      "inherits": "Humanoid",
+      "components": {
+        "PositionComponent": { "x": 15, "y": 12 },
+        "RenderableComponent": { "char": "o", "color": "GREEN" },
+        "DescriptionComponent": { "text": "A hulking Orc, it looks angry." },
+        "StatsComponent": { "strength": 12, "intelligence": 7, "wisdom": 7, "dexterity": 10, "constitution": 11, "charisma": 6 },
+        "CombatComponent": { "hp": 4, "ac": 6, "thac0": 19 },
+        "FactionComponent": { "name": "monsters" }
+      }
+    }
+  ]
+}

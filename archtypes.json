@@ -1,0 +1,98 @@
+{
+  "Abstract": {
+    "components": {}
+  },
+  "PhysicalObject": {
+    "inherits": "Abstract",
+    "components": {
+      "PositionComponent": { "x": 0, "y": 0 }
+    }
+  },
+  "InanimateObject": {
+    "inherits": "PhysicalObject",
+    "components": {
+      "DescriptionComponent": { "text": "An inanimate object." }
+    }
+  },
+  "AnimateObject": {
+    "inherits": "PhysicalObject",
+    "components": {
+      "CombatComponent": { "hp": 1, "ac": 10, "thac0": 20 }
+    }
+  },
+  "Item": {
+    "inherits": "InanimateObject",
+    "components": {
+      "ItemComponent": { "material": "steel" }
+    }
+  },
+  "Creature": {
+    "inherits": "AnimateObject",
+    "components": {
+      "StatsComponent": { "strength": 10, "intelligence": 10, "wisdom": 10, "dexterity": 10, "constitution": 10, "charisma": 10 },
+      "CanEquipComponent": {},
+      "EquipmentComponent": {}
+    }
+  },
+  "Humanoid": {
+    "inherits": "Creature",
+    "components": {
+      "FactionComponent": { "name": "neutral" }
+    }
+  },
+  "Weapon": {
+    "inherits": "Item",
+    "components": {
+      "EquippableComponent": { "slot": "weapon" }
+    }
+  },
+  "Armor": {
+    "inherits": "Item",
+    "components": {
+      "EquippableComponent": { "slot": "armor" }
+    }
+  },
+  "Amulet": {
+    "inherits": "Item",
+    "components": {
+      "EquippableComponent": { "slot": "amulet" }
+    }
+  },
+  "Openable": {
+    "inherits": "Abstract",
+    "components": {
+      "OpenableComponent": { "is_open": false }
+    }
+  },
+  "Container": {
+    "inherits": ["InanimateObject", "Openable"],
+    "components": {
+        "ContainerComponent": {},
+        "BlocksMovementComponent": {}
+    }
+  },
+  "Lockable": {
+    "inherits": "Abstract",
+    "components": {
+        "LockableComponent": {}
+    }
+  },
+  "Door": {
+    "inherits": ["InanimateObject", "Openable", "Lockable"],
+    "components": {
+        "BlocksMovementComponent": {}
+    }
+  },
+  "Key": {
+      "inherits": "Item",
+      "components": {
+          "KeyComponent": {}
+      }
+  },
+  "Padlock": {
+      "inherits": "Item",
+      "components": {
+          "PadlockComponent": {}
+      }
+  }
+}
