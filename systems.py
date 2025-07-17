@@ -3,8 +3,8 @@
 
 import pygame
 import random
+import re
 from components import *
-import random  # Import the 'random' module
 
 class System:
     """A base class for systems. Systems contain logic that operates on entities with specific components."""
@@ -21,10 +21,19 @@ class InputSystem(System):
         game_state = kwargs.get('game_state')
 
         if not game_state: return
+        
+        # Only process input during player turn
+        if game_state.game_state != 'PLAYER_TURN':
+            return
 
         player_entities = self.world.get_entities_with_components(PlayerControllableComponent)
         if not player_entities: return
         player_id = player_entities[0]
+
+        # Check if player is affected by status effects that prevent action
+        state = self.world.get_component(player_id, StateComponent)
+        if state and (state.paralyzed or state.petrified or state.unconscious or state.stunned):
+            return  # Player cannot act
 
         for event in events:
             if event.type == pygame.KEYDOWN:
@@ -39,13 +48,23 @@ class InputSystem(System):
                     self.handle_look_input(event, game_state)
                 elif not game_state.show_inventory:  # Don't process movement when inventory is open
                     if event.key in [pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT]:
-                        self.handle_player_movement(event, player_id)
+                        # Check for confusion
+                        if state and state.confused:
+                            # Confused movement is random
+                            if random.random() < 0.5:  # 50% chance to move in random direction
+                                dx, dy = random.choice([(0, 1), (0, -1), (1, 0), (-1, 0)])
+                                self.world.add_component(player_id, WantsToMoveComponent(dx, dy))
+                                game_state.player_acted = True
+                                game_state.add_message("You stumble around confused!")
+                                return
+                        
+                        self.handle_player_movement(event, player_id, game_state)
                     elif event.key == pygame.K_g:
-                        self.handle_pickup(player_id)
+                        self.handle_pickup(player_id, game_state)
                     elif event.key == pygame.K_a:
-                        self.handle_attack(player_id)
+                        self.handle_attack(player_id, game_state)
 
-    def handle_player_movement(self, event, player_id):
+    def handle_player_movement(self, event, player_id, game_state):
         dx, dy = 0, 0
         if event.key == pygame.K_UP: dy = -1
         elif event.key == pygame.K_DOWN: dy = 1
@@ -54,6 +73,7 @@ class InputSystem(System):
 
         if dx != 0 or dy != 0:
             self.world.add_component(player_id, WantsToMoveComponent(dx, dy))
+            game_state.player_acted = True  # Movement ends turn
 
     def handle_look_input(self, event, game_state):
         cursor_id = game_state.cursor_id
@@ -68,13 +88,14 @@ class InputSystem(System):
         if dx != 0 or dy != 0:
             self.world.add_component(cursor_id, WantsToMoveComponent(dx, dy))
 
-    def handle_pickup(self, player_id):
+    def handle_pickup(self, player_id, game_state):
         player_pos = self.world.get_component(player_id, PositionComponent)
         item_id = self.world.get_item_at_position(player_pos.x, player_pos.y)
         if item_id and self.world.get_component(item_id, ItemComponent):
             self.world.add_component(player_id, WantsToPickupItemComponent(item_id))
+            game_state.player_acted = True  # Pickup ends turn
 
-    def handle_attack(self, player_id):
+    def handle_attack(self, player_id, game_state):
         player_pos = self.world.get_component(player_id, PositionComponent)
         
         # Check adjacent tiles for a monster
@@ -87,12 +108,16 @@ class InputSystem(System):
         
         for x, y in adjacent_tiles:
             target_id = self.world.get_entity_at_position(x, y)
-            if target_id and self.world.get_component(target_id, FactionComponent).name == "monsters":
-                # Found a monster, create an attack intent
-                self.world.add_component(player_id, WantsToAttackComponent(target_id))
-                return  # Attack only one monster at a time
+            if target_id:
+                target_faction = self.world.get_component(target_id, FactionComponent)
+                if target_faction and target_faction.name == "monsters":
+                    # Found a monster, create an attack intent
+                    self.world.add_component(player_id, WantsToAttackComponent(target_id))
+                    game_state.player_acted = True  # Attack ends turn
+                    return  # Attack only one monster at a time
         
-        # If no monster found, you could add a "no target" message
+        # If no monster found, add a message
+        game_state.add_message("There's nothing to attack here.")
 
 class MovementSystem(System):
     """Processes movement requests, handling collisions and interactions."""
@@ -131,8 +156,6 @@ class MovementSystem(System):
 class ActionSystem(System):
     """Processes complex actions like picking up items and unlocking things."""
     def update(self, *args, **kwargs):
-        self.player_acted = False
-        self.monster_acting = False
         game_state = kwargs.get('game_state')
 
         # Process pickup intents
@@ -152,9 +175,6 @@ class ActionSystem(System):
                 game_state.add_message(f"You pick up the {item_desc.text}.")
 
             self.world.remove_component(entity_id, WantsToPickupItemComponent)
-            if self.world.get_component(entity_id, PlayerControllableComponent):
-                self.player_acted = True
-
 
         # Process open intents
         for entity_id in self.world.get_entities_with_components(WantsToOpenComponent):
@@ -168,9 +188,6 @@ class ActionSystem(System):
                 self.try_unlock(entity_id, target_id, lockable, game_state)
             elif openable:
                 self.open_target(target_id, openable, game_state)
-
-            if self.world.get_component(entity_id, PlayerControllableComponent):
-                self.player_acted = True
 
             self.world.remove_component(entity_id, WantsToOpenComponent)
 
@@ -218,7 +235,6 @@ class ActionSystem(System):
         if renderable and renderable.open_char:
             renderable.char = renderable.open_char
 
-
 class CombatSystem(System):
     """Handles combat between entities."""
     def update(self, *args, **kwargs):
@@ -238,43 +254,262 @@ class CombatSystem(System):
                 self.world.remove_component(attacker_id, WantsToAttackComponent)
                 continue
 
+            # Skip if target is already dead
+            if defender_combat.hp <= 0:
+                self.world.remove_component(attacker_id, WantsToAttackComponent)
+                continue
+
+            # Get state components for status effect modifiers
+            attacker_state = self.world.get_component(attacker_id, StateComponent)
+            defender_state = self.world.get_component(target_id, StateComponent)
+
             # Determine names for messaging
             attacker_name = "You" if self.world.get_component(attacker_id, PlayerControllableComponent) else attacker_desc.text
             defender_name = "you" if self.world.get_component(target_id, PlayerControllableComponent) else f"the {defender_desc.text}"
 
-            # Resolve attack
+            # Calculate attack modifiers from status effects
+            attack_thac0 = attacker_combat.thac0
+            if attacker_state:
+                attack_thac0 += attacker_state.thac0_modifier
+
+            # Resolve attack using OSE rules (THAC0 system)
             attack_roll = random.randint(1, 20)
-            if attack_roll >= (attacker_combat.thac0 - defender_combat.ac):
-                damage = random.randint(1, 6)  # 1d6 damage for now
-                defender_combat.hp -= damage
-                game_state.add_message(f"{attacker_name} hit {defender_name} for {damage} damage!")
+            hit_ac = attack_thac0 - attack_roll
+            
+            if hit_ac <= defender_combat.ac:
+                # Calculate damage with modifiers
+                base_damage = random.randint(1, 6)  # 1d6 damage for now
+                final_damage = base_damage
+                if attacker_state:
+                    final_damage += attacker_state.damage_modifier
+                final_damage = max(1, final_damage)  # Minimum 1 damage
+                
+                defender_combat.hp -= final_damage
+                game_state.add_message(f"{attacker_name} hit {defender_name} for {final_damage} damage!")
 
                 if defender_combat.hp <= 0:
                     game_state.add_message(f"The {defender_desc.text} dies!")
-                    # TODO: Implement proper entity death (remove entity, leave corpse, etc.)
+                    defender_combat.hp = 0
+                else:
+                    # Step 2.1: Check for and trigger abilities after successful attack
+                    abilities_comp = self.world.get_component(attacker_id, AbilitiesComponent)
+                    if abilities_comp:
+                        for ability_id in abilities_comp.abilities:
+                            if ability_id in self.world.abilities:
+                                ability_data = self.world.abilities[ability_id]
+                                if ability_data.get("type") == "on_attack":
+                                    # Roll for chance
+                                    chance = ability_data.get("chance", 0.0)
+                                    if random.random() <= chance:
+                                        # Trigger the ability
+                                        status_effect = ability_data.get("status_effect")
+                                        if status_effect:
+                                            self.world.add_component(target_id, WantsToApplyStatusComponent(
+                                                status_effect_data=status_effect,
+                                                source_entity_id=attacker_id
+                                            ))
             else:
-                game_state.add_message(f"{attacker_name} miss {defender_name}.")
-
-            # An attack is an action, so we mark it for the turn-based system
-            if self.world.get_component(attacker_id, PlayerControllableComponent):
-                self.world.get_system(ActionSystem).player_acted = True
+                game_state.add_message(f"{attacker_name} missed {defender_name}.")
 
             self.world.remove_component(attacker_id, WantsToAttackComponent)
-        # Monster actions (simplified for now - just move randomly)  
-        if game_state.game_state == 'MONSTER_TURN':
-            monster_entities = self.world.get_entities_with_components(
-                PositionComponent, CombatComponent, FactionComponent
-            )
 
-            for entity_id in monster_entities:
-                if self.world.get_component(entity_id, PlayerControllableComponent):
-                    continue  # Skip player
-                if self.world.get_component(entity_id, FactionComponent).name != "monsters":
-                    continue
-                self.monster_acting = True
-                dx, dy = random.choice([(0, 1), (0, -1), (1, 0), (-1, 0), (0,0)])  # Simple random movement
-                if dx != 0 or dy != 0:
-                    self.world.add_component(entity_id, WantsToMoveComponent(dx, dy))
+
+class StatusEffectSystem(System):
+    """Handles application and management of status effects."""
+    
+    def update(self, *args, **kwargs):
+        game_state = kwargs.get('game_state')
+        
+        # Step 2.2: Apply new status effects
+        self.apply_new_status_effects(game_state)
+        
+        # Update existing status effects (reduce duration, check for expiry)
+        self.update_existing_status_effects(game_state)
+    
+    def apply_new_status_effects(self, game_state):
+        """Apply new status effects from WantsToApplyStatusComponent."""
+        for entity_id in self.world.get_entities_with_components(WantsToApplyStatusComponent):
+            intent = self.world.get_component(entity_id, WantsToApplyStatusComponent)
+            status_data = intent.status_effect_data
+            
+            # Get or create StatusEffectsComponent
+            status_effects_comp = self.world.get_component(entity_id, StatusEffectsComponent)
+            if not status_effects_comp:
+                status_effects_comp = StatusEffectsComponent()
+                self.world.add_component(entity_id, status_effects_comp)
+            
+            # Get or create StateComponent
+            state_comp = self.world.get_component(entity_id, StateComponent)
+            if not state_comp:
+                state_comp = StateComponent()
+                self.world.add_component(entity_id, state_comp)
+            
+            # Look up the status effect definition
+            effect_id = status_data.get("id")
+            if effect_id not in self.world.status_effects:
+                print(f"Warning: Status effect '{effect_id}' not found in status_effects.json")
+                self.world.remove_component(entity_id, WantsToApplyStatusComponent)
+                continue
+            
+            effect_definition = self.world.status_effects[effect_id]
+            
+            # Create the status effect entry
+            effect_entry = {
+                "id": effect_id,
+                "name": effect_definition.get("name", effect_id),
+                "type": status_data.get("type", "temporary"),
+                "effects_data": effect_definition.get("effects", []),
+                "turns_remaining": self.parse_duration(status_data.get("duration", "1"))
+            }
+            
+            # Add to active effects
+            status_effects_comp.effects.append(effect_entry)
+            
+            # Apply the mechanical effects immediately
+            self.apply_effect_mechanics(entity_id, effect_entry, state_comp)
+            
+            # Show the application message
+            target_name = "You" if self.world.get_component(entity_id, PlayerControllableComponent) else "The creature"
+            message = status_data.get("on_apply_message", f"{target_name} is affected by {effect_entry['name']}!")
+            if self.world.get_component(entity_id, PlayerControllableComponent):
+                message = f"You {message}"
+            else:
+                desc = self.world.get_component(entity_id, DescriptionComponent)
+                creature_name = desc.text if desc else "creature"
+                message = f"The {creature_name} {message}"
+            
+            game_state.add_message(message)
+            
+            self.world.remove_component(entity_id, WantsToApplyStatusComponent)
+    
+    def parse_duration(self, duration_str):
+        """Parse duration strings like '1d6', '2d4', or plain numbers."""
+        if isinstance(duration_str, int):
+            return duration_str
+        
+        duration_str = str(duration_str)
+        
+        # Handle dice notation (e.g., "1d6", "2d4")
+        dice_match = re.match(r'(\d+)d(\d+)', duration_str)
+        if dice_match:
+            num_dice = int(dice_match.group(1))
+            die_size = int(dice_match.group(2))
+            total = 0
+            for _ in range(num_dice):
+                total += random.randint(1, die_size)
+            return total
+        
+        # Handle plain numbers
+        try:
+            return int(duration_str)
+        except ValueError:
+            return 1  # Default duration
+    
+    def apply_effect_mechanics(self, entity_id, effect_entry, state_comp):
+        """Apply the mechanical changes of a status effect."""
+        effects_data = effect_entry["effects_data"]
+        
+        for effect in effects_data:
+            target = effect.get("target")
+            attribute = effect.get("attribute")
+            flag = effect.get("flag")
+            value = effect.get("value")
+            
+            if target == "state":
+                # Apply state flags
+                if flag and hasattr(state_comp, flag):
+                    setattr(state_comp, flag, value)
+            
+            elif target == "StatsComponent":
+                # Apply stat modifications
+                stats_comp = self.world.get_component(entity_id, StatsComponent)
+                if stats_comp and attribute and hasattr(stats_comp, attribute):
+                    current_value = getattr(stats_comp, attribute)
+                    setattr(stats_comp, attribute, current_value + value)
+            
+            elif target == "CombatComponent":
+                # Apply combat modifications
+                combat_comp = self.world.get_component(entity_id, CombatComponent)
+                if combat_comp and attribute and hasattr(combat_comp, attribute):
+                    current_value = getattr(combat_comp, attribute)
+                    setattr(combat_comp, attribute, current_value + value)
+                elif attribute in ["thac0", "damage_modifier", "save_penalty"]:
+                    # Apply to state component modifiers
+                    if attribute == "thac0":
+                        state_comp.thac0_modifier += value
+                    elif attribute == "damage_modifier":
+                        state_comp.damage_modifier += value
+                    elif attribute == "save_penalty":
+                        state_comp.save_penalty += value
+    
+    def update_existing_status_effects(self, game_state):
+        """Update durations and remove expired effects."""
+        for entity_id in self.world.get_entities_with_components(StatusEffectsComponent):
+            status_effects_comp = self.world.get_component(entity_id, StatusEffectsComponent)
+            state_comp = self.world.get_component(entity_id, StateComponent)
+            
+            effects_to_remove = []
+            
+            for i, effect in enumerate(status_effects_comp.effects):
+                if effect["type"] == "temporary":
+                    effect["turns_remaining"] -= 1
+                    
+                    if effect["turns_remaining"] <= 0:
+                        effects_to_remove.append(i)
+                        # Remove the effect's mechanical changes
+                        self.remove_effect_mechanics(entity_id, effect, state_comp)
+                        
+                        # Show expiry message
+                        target_name = "You" if self.world.get_component(entity_id, PlayerControllableComponent) else "The creature"
+                        if self.world.get_component(entity_id, PlayerControllableComponent):
+                            message = f"You are no longer {effect['name'].lower()}."
+                        else:
+                            desc = self.world.get_component(entity_id, DescriptionComponent)
+                            creature_name = desc.text if desc else "creature"
+                            message = f"The {creature_name} is no longer {effect['name'].lower()}."
+                        
+                        game_state.add_message(message)
+            
+            # Remove expired effects (in reverse order to maintain indices)
+            for i in reversed(effects_to_remove):
+                del status_effects_comp.effects[i]
+    
+    def remove_effect_mechanics(self, entity_id, effect_entry, state_comp):
+        """Remove the mechanical changes of an expired status effect."""
+        effects_data = effect_entry["effects_data"]
+        
+        for effect in effects_data:
+            target = effect.get("target")
+            attribute = effect.get("attribute")
+            flag = effect.get("flag")
+            value = effect.get("value")
+            
+            if target == "state":
+                # Remove state flags
+                if flag and hasattr(state_comp, flag):
+                    setattr(state_comp, flag, False)
+            
+            elif target == "StatsComponent":
+                # Reverse stat modifications
+                stats_comp = self.world.get_component(entity_id, StatsComponent)
+                if stats_comp and attribute and hasattr(stats_comp, attribute):
+                    current_value = getattr(stats_comp, attribute)
+                    setattr(stats_comp, attribute, current_value - value)
+            
+            elif target == "CombatComponent":
+                # Reverse combat modifications
+                combat_comp = self.world.get_component(entity_id, CombatComponent)
+                if combat_comp and attribute and hasattr(combat_comp, attribute):
+                    current_value = getattr(combat_comp, attribute)
+                    setattr(combat_comp, attribute, current_value - value)
+                elif attribute in ["thac0", "damage_modifier", "save_penalty"]:
+                    # Remove from state component modifiers
+                    if attribute == "thac0":
+                        state_comp.thac0_modifier -= value
+                    elif attribute == "damage_modifier":
+                        state_comp.damage_modifier -= value
+                    elif attribute == "save_penalty":
+                        state_comp.save_penalty -= value
 
 
 class RenderSystem(System):
@@ -308,8 +543,25 @@ class RenderSystem(System):
 
             if self.world.get_component(entity_id, CursorComponent): continue
 
+            # Don't render dead creatures
+            combat = self.world.get_component(entity_id, CombatComponent)
+            if combat and combat.hp <= 0:
+                continue
+
             renderable = self.world.get_component(entity_id, RenderableComponent)
-            text_surface = self.font.render(renderable.char, True, renderable.color)
+            
+            # Modify color based on status effects
+            color = renderable.color
+            state = self.world.get_component(entity_id, StateComponent)
+            if state:
+                if state.paralyzed or state.petrified:
+                    color = (128, 128, 128)  # Gray for paralyzed/petrified
+                elif state.confused:
+                    color = (255, 0, 255)    # Magenta for confused
+                elif state.lethally_poisoned or state.sickened:
+                    color = (0, 255, 0)      # Green for poisoned
+            
+            text_surface = self.font.render(renderable.char, True, color)
             self.screen.blit(text_surface, (pos.x * self.tile_size, pos.y * self.tile_size))
 
         # Draw look cursor and message
@@ -335,31 +587,34 @@ class RenderSystem(System):
             pygame.draw.rect(self.screen, (50, 50, 0), bg_rect)
 
         # Get entity at cursor position and draw its description
-        # Check for non-item entities first
         entity_id = self.world.get_entity_at_position(cursor_pos.x, cursor_pos.y)
-        # If no entity, check for an item
         if not entity_id:
             entity_id = self.world.get_item_at_position(cursor_pos.x, cursor_pos.y)
 
         if entity_id:
             desc = self.world.get_component(entity_id, DescriptionComponent)
             material = self.world.get_component(entity_id, MaterialComponent)
+            
+            # Add status effect info to description
+            status_info = ""
+            status_effects_comp = self.world.get_component(entity_id, StatusEffectsComponent)
+            if status_effects_comp and status_effects_comp.effects:
+                status_names = [effect["name"] for effect in status_effects_comp.effects]
+                status_info = f" [{', '.join(status_names)}]"
+            
             if desc:
-                description_text = desc.text.format(material=material.name if material else "unknown")
+                description_text = desc.text.format(material=material.name if material else "unknown") + status_info
                 description_surface = self.font.render(description_text, True, (255, 255, 255))
-                # Center the description at the bottom of the screen
                 description_rect = description_surface.get_rect(centerx=self.screen.get_width() // 2, y=self.screen.get_height() - 40)
                 self.screen.blit(description_surface, description_rect)
 
     def draw_messages(self, game_state):
         y_offset = self.screen.get_height() - 20
-        # Iterate over the last 5 messages, starting from the most recent.
         for message in reversed(game_state.message_log[-5:]):
             msg_surface = self.font.render(message, True, (255, 255, 255))
-            # Position messages from the bottom of the screen up.
             msg_rect = msg_surface.get_rect(centerx=self.screen.get_width() / 2, bottom=y_offset)
             self.screen.blit(msg_surface, msg_rect)
-            y_offset -= 20 # Move up for the next message
+            y_offset -= 20
 
     def draw_inventory(self, game_state):
         # Get player entity
@@ -401,7 +656,6 @@ class RenderSystem(System):
             self.screen.blit(empty_surface, empty_rect)
         else:
             for item_id in inventory.items:
-                # Get item components
                 desc = self.world.get_component(item_id, DescriptionComponent)
                 renderable = self.world.get_component(item_id, RenderableComponent)
                 
@@ -440,40 +694,78 @@ class RenderSystem(System):
 class AISystem(System):
     """Controls the actions of non-player entities."""
     def update(self, *args, **kwargs):
-        game_state = kwargs['game_state']
+        game_state = kwargs.get('game_state')
+        
+        # Only act during monster turn
         if game_state.game_state != 'MONSTER_TURN':
-            return  # Only act on monster turn
-
+            return
+        
         player_entity = self.world.get_entities_with_components(PlayerControllableComponent)
         if not player_entity: return
         player_id = player_entity[0]
         player_pos = self.world.get_component(player_id, PositionComponent)
 
-        for entity_id in self.world.get_entities_with_components(FactionComponent, PositionComponent):
+        for entity_id in self.world.get_entities_with_components(FactionComponent, PositionComponent, CombatComponent):
             faction = self.world.get_component(entity_id, FactionComponent)
             if faction.name != "monsters":
                 continue  # Only control monsters
+            
+            # Skip dead monsters
+            combat = self.world.get_component(entity_id, CombatComponent)
+            if combat.hp <= 0:
+                continue
+
+            # Step 2.3: Check for status effects that prevent action
+            state = self.world.get_component(entity_id, StateComponent)
+            if state and (state.paralyzed or state.petrified or state.unconscious or state.stunned):
+                continue  # Monster cannot act
 
             monster_pos = self.world.get_component(entity_id, PositionComponent)
 
             # Check if player is within sight (10 tiles for now)
             distance = max(abs(player_pos.x - monster_pos.x), abs(player_pos.y - monster_pos.y))
+            
             if distance <= 10:
                 # Check for adjacency
                 if distance == 1:
                     # Attack the player
                     self.world.add_component(entity_id, WantsToAttackComponent(player_id))
                 else:
-                    # Move towards the player (very basic movement for now)
+                    # Move towards the player (simple pathfinding)
                     dx, dy = 0, 0
-                    if player_pos.x > monster_pos.x:
-                        dx = 1
-                    elif player_pos.x < monster_pos.x:
-                        dx = -1
-                    if player_pos.y > monster_pos.y:
-                        dy = 1
-                    elif player_pos.y < monster_pos.y:
-                        dy = -1
-                    self.world.add_component(entity_id, WantsToMoveComponent(dx, dy))
-            # If the player is not in sight, monsters will continue with random movement from ActionSystem
-            # (or we could add more complex "wandering" behavior here later).
+                    
+                    # Check for confusion
+                    if state and state.confused:
+                        # Confused movement is random
+                        if random.random() < 0.5:  # 50% chance to move randomly
+                            dx, dy = random.choice([(0, 1), (0, -1), (1, 0), (-1, 0)])
+                        else:
+                            # Normal movement toward player
+                            if player_pos.x > monster_pos.x:
+                                dx = 1
+                            elif player_pos.x < monster_pos.x:
+                                dx = -1
+                            if player_pos.y > monster_pos.y:
+                                dy = 1
+                            elif player_pos.y < monster_pos.y:
+                                dy = -1
+                    else:
+                        # Normal movement toward player
+                        if player_pos.x > monster_pos.x:
+                            dx = 1
+                        elif player_pos.x < monster_pos.x:
+                            dx = -1
+                        if player_pos.y > monster_pos.y:
+                            dy = 1
+                        elif player_pos.y < monster_pos.y:
+                            dy = -1
+                    
+                    # Only move if not blocked
+                    target_x, target_y = monster_pos.x + dx, monster_pos.y + dy
+                    target_entity = self.world.get_entity_at_position(target_x, target_y)
+                    
+                    if not target_entity or not self.world.get_component(target_entity, BlocksMovementComponent):
+                        self.world.add_component(entity_id, WantsToMoveComponent(dx, dy))
+            else:
+                # Player not in sight - do nothing or wander randomly
+                pass

@@ -9,7 +9,7 @@ import copy
 import random
 import components
 import factory
-from systems import InputSystem, MovementSystem, RenderSystem, ActionSystem, CombatSystem, AISystem  # Import CombatSystem, AISystem
+from systems import InputSystem, MovementSystem, RenderSystem, ActionSystem, CombatSystem, AISystem, StatusEffectSystem
 
 # --- Core ECS Classes ---
 class Entity:
@@ -29,6 +29,8 @@ class World:
         self.systems = []
         self.archetypes = {}
         self.materials = {}
+        self.abilities = {}
+        self.status_effects = {}
 
     def create_entity(self):
         entity = Entity()
@@ -109,6 +111,9 @@ class Game:
         self.show_inventory = False
         self.cursor_id = None
         self.message_log = []
+        # Turn-based system attributes
+        self.game_state = 'PLAYER_TURN'  # Can be 'PLAYER_TURN' or 'MONSTER_TURN'
+        self.player_acted = False  # Track if player has acted this turn
         self.screen = pygame.display.set_mode((self.WINDOW_WIDTH, self.WINDOW_HEIGHT), pygame.RESIZABLE)
         pygame.display.set_caption("ASCII Roguelike")
         self.clock = pygame.time.Clock()
@@ -197,8 +202,6 @@ class Game:
 
     def create_entity_from_archetype(self, archetype_name, component_overrides={}):
         """Creates a single entity from an archetype, allowing for component overrides."""
-        # This function now correctly uses the term 'archetype_name' to look up a blueprint
-        # in the master catalog, which can be a core archetype or a specific template.
         entity_def = {
             "name": archetype_name,
             "inherits": archetype_name,
@@ -218,6 +221,10 @@ class Game:
         # Load materials
         self.world.materials = self.load_json_file('materials.json') or {}
         
+        # Load abilities and status effects
+        self.world.abilities = self.load_json_file('abilities.json') or {}
+        self.world.status_effects = self.load_json_file('status_effects.json') or {}
+        
         # Load hand-crafted entity instances from their own files
         creatures_data = self.load_json_file('creatures.json') or {"entities": []}
         items_data = self.load_json_file('items.json') or {"entities": []}
@@ -226,7 +233,6 @@ class Game:
         if items_data: self.create_entities_from_definitions(items_data["entities"])
         
         # Use the factory to create procedural content
-        # Now using base archetypes with material overrides
         factory.create_locked_container_and_key(self, container_pos=(10, 10), key_pos=(16, 12), 
                                                container_material="wood", key_material="silver")
         factory.create_locked_container_and_key(self, container_pos=(14, 8), key_pos=(5, 3), 
@@ -236,12 +242,13 @@ class Game:
         factory.create_locked_door_with_key(self, door_pos=(15, 5), key_pos=(2, 2), 
                                            door_material="wood", key_material="brass")
 
-        # Initialize systems
+        # Initialize systems (order matters!)
         self.world.add_system(InputSystem(self.world))
         self.world.add_system(MovementSystem(self.world))
         self.world.add_system(ActionSystem(self.world))
-        self.world.add_system(AISystem(self.world)) # Add the AISystem
+        self.world.add_system(AISystem(self.world))
         self.world.add_system(CombatSystem(self.world))
+        self.world.add_system(StatusEffectSystem(self.world))  # Add status effect system
         self.world.add_system(RenderSystem(self.world, self.screen, self.font, self.TILE_SIZE))
         
         self.create_cursor()
@@ -282,16 +289,45 @@ class Game:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_f:
                         self.fullscreen = not self.fullscreen
-                        if self.fullscreen: self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-                        else: self.screen = pygame.display.set_mode((self.WINDOW_WIDTH, self.WINDOW_HEIGHT), pygame.RESIZABLE)
+                        if self.fullscreen: 
+                            self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+                        else: 
+                            self.screen = pygame.display.set_mode((self.WINDOW_WIDTH, self.WINDOW_HEIGHT), pygame.RESIZABLE)
                         for system in self.world.systems:
-                            if isinstance(system, RenderSystem): system.screen = self.screen
+                            if isinstance(system, RenderSystem): 
+                                system.screen = self.screen
                     elif event.key == pygame.K_ESCAPE:
-                        if self.look_mode: self.toggle_look_mode()
-                        elif self.show_inventory: self.toggle_inventory()
-                        else: running = False
+                        if self.look_mode: 
+                            self.toggle_look_mode()
+                        elif self.show_inventory: 
+                            self.toggle_inventory()
+                        else: 
+                            running = False
             
-            self.world.update(events=events, game_state=self)
+            # Turn-based game loop
+            if self.game_state == 'PLAYER_TURN':
+                # Process player input and actions
+                self.player_acted = False
+                self.world.update(events=events, game_state=self)
+                
+                # Check if player performed an action that ends their turn
+                if self.player_acted:
+                    self.game_state = 'MONSTER_TURN'
+                    self.add_message("--- Monster Turn ---")
+            
+            elif self.game_state == 'MONSTER_TURN':
+                # Process monster actions
+                self.world.update(events=[], game_state=self)  # No events during monster turn
+                
+                # After monsters act, return to player turn
+                self.game_state = 'PLAYER_TURN'
+                self.add_message("--- Player Turn ---")
+            
+            # Always update rendering
+            render_system = self.world.get_system(RenderSystem)
+            if render_system:
+                render_system.update(game_state=self)
+            
             pygame.display.flip()
             self.clock.tick(self.FPS)
 

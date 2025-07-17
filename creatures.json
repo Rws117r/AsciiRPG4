@@ -10,7 +10,8 @@
         "DescriptionComponent": { "text": "This is you, the brave adventurer." },
         "StatsComponent": { "strength": 13, "intelligence": 12, "wisdom": 10, "dexterity": 14, "constitution": 15, "charisma": 9 },
         "CombatComponent": { "hp": 8, "ac": 7, "thac0": 19 },
-        "FactionComponent": { "name": "player" }
+        "FactionComponent": { "name": "player" },
+        "StateComponent": {}
       }
     },
     {
@@ -22,19 +23,36 @@
         "DescriptionComponent": { "text": "A foul-smelling, green-skinned goblin." },
         "StatsComponent": { "strength": 8, "intelligence": 8, "wisdom": 8, "dexterity": 12, "constitution": 9, "charisma": 7 },
         "CombatComponent": { "hp": 4, "ac": 6, "thac0": 19 },
-        "FactionComponent": { "name": "monsters" }
+        "FactionComponent": { "name": "monsters" },
+        "StateComponent": {}
       }
     },
     {
-      "name": "Orc",
+      "name": "Ghoul",
       "inherits": "Humanoid",
       "components": {
         "PositionComponent": { "x": 15, "y": 12 },
-        "RenderableComponent": { "char": "o", "color": "GREEN" },
-        "DescriptionComponent": { "text": "A hulking Orc, it looks angry." },
+        "RenderableComponent": { "char": "Z", "color": "GREEN" },
+        "DescriptionComponent": { "text": "A rotting undead creature with paralytic claws." },
         "StatsComponent": { "strength": 12, "intelligence": 7, "wisdom": 7, "dexterity": 10, "constitution": 11, "charisma": 6 },
-        "CombatComponent": { "hp": 4, "ac": 6, "thac0": 19 },
-        "FactionComponent": { "name": "monsters" }
+        "CombatComponent": { "hp": 6, "ac": 6, "thac0": 19 },
+        "FactionComponent": { "name": "monsters" },
+        "AbilitiesComponent": { "abilities": ["ghoul_touch"] },
+        "StateComponent": {}
+      }
+    },
+    {
+      "name": "Shadow",
+      "inherits": "Humanoid",
+      "components": {
+        "PositionComponent": { "x": 7, "y": 15 },
+        "RenderableComponent": { "char": "S", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A dark, incorporeal shadow that drains strength." },
+        "StatsComponent": { "strength": 14, "intelligence": 6, "wisdom": 12, "dexterity": 14, "constitution": 13, "charisma": 2 },
+        "CombatComponent": { "hp": 8, "ac": 7, "thac0": 17 },
+        "FactionComponent": { "name": "monsters" },
+        "AbilitiesComponent": { "abilities": ["shadow_touch"] },
+        "StateComponent": {}
       }
     }
   ]

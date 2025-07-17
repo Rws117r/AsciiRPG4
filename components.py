@@ -134,3 +134,61 @@ class WantsToAttackComponent(Component):
     """Intent to attack another entity."""
     def __init__(self, target_id):
         self.target_id = target_id
+
+# New components for status effects and abilities
+
+class AbilitiesComponent(Component):
+    """Stores a list of ability IDs that an entity possesses."""
+    def __init__(self, abilities=None):
+        self.abilities = abilities if abilities is not None else []
+
+class StatusEffectsComponent(Component):
+    """Stores active status effects on an entity."""
+    def __init__(self, effects=None):
+        self.effects = effects if effects is not None else []
+        # Each effect is a dict with: id, name, duration, type, effects_data, turns_remaining
+
+class StateComponent(Component):
+    """Stores state flags and temporary modifiers for an entity."""
+    def __init__(self):
+        # State flags
+        self.paralyzed = False
+        self.blinded = False
+        self.charmed = False
+        self.confused = False
+        self.deafened = False
+        self.fascinated = False
+        self.feebleminded = False
+        self.petrified = False
+        self.slowed = False
+        self.stunned = False
+        self.unconscious = False
+        self.cursed_stat_reduction = False
+        self.mummy_rot = False
+        self.diseased = False
+        self.lethally_poisoned = False
+        self.sickened = False
+        self.possessed = False
+        self.swallowed_whole = False
+        
+        # Numerical modifiers
+        self.energy_drained = 0  # Energy drain levels
+        
+        # Combat modifiers
+        self.thac0_modifier = 0
+        self.ac_modifier = 0
+        self.damage_modifier = 0
+        self.save_penalty = 0
+
+class WantsToApplyStatusComponent(Component):
+    """Intent to apply a status effect to an entity."""
+    def __init__(self, status_effect_data, source_entity_id=None):
+        self.status_effect_data = status_effect_data
+        self.source_entity_id = source_entity_id
+
+class WantsToTriggerAbilityComponent(Component):
+    """Intent to trigger an ability."""
+    def __init__(self, ability_id, target_id=None, trigger_type="on_attack"):
+        self.ability_id = ability_id
+        self.target_id = target_id
+        self.trigger_type = trigger_type
