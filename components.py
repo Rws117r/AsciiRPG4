@@ -129,3 +129,8 @@ class WantsToOpenComponent(Component):
     """Intent to open a container or door."""
     def __init__(self, target_id):
         self.target_id = target_id
+
+class WantsToAttackComponent(Component):
+    """Intent to attack another entity."""
+    def __init__(self, target_id):
+        self.target_id = target_id

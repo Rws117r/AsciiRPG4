@@ -9,7 +9,7 @@ import copy
 import random
 import components
 import factory
-from systems import InputSystem, MovementSystem, RenderSystem, ActionSystem
+from systems import InputSystem, MovementSystem, RenderSystem, ActionSystem, CombatSystem  # Import CombatSystem
 
 # --- Core ECS Classes ---
 class Entity:
@@ -61,6 +61,13 @@ class World:
             except KeyError:
                 return []
         return list(entity_ids)
+    
+    def get_system(self, system_type):
+        """Finds and returns a system of a specific type."""
+        for system in self.systems:
+            if isinstance(system, system_type):
+                return system
+        return None
 
     def get_entity_at_position(self, x, y):
         for entity_id in self.get_entities_with_components(components.PositionComponent):
@@ -233,6 +240,7 @@ class Game:
         self.world.add_system(InputSystem(self.world))
         self.world.add_system(MovementSystem(self.world))
         self.world.add_system(ActionSystem(self.world))
+        self.world.add_system(CombatSystem(self.world))
         self.world.add_system(RenderSystem(self.world, self.screen, self.font, self.TILE_SIZE))
         
         self.create_cursor()

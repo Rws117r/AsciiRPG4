@@ -1,0 +1,167 @@
+{
+  "ability_drain_strength": {
+    "name": "Strength Drained",
+    "effects": [
+      { "target": "StatsComponent", "attribute": "strength", "value": -1 }
+    ]
+  },
+  "ability_drain_wisdom": {
+    "name": "Wisdom Drained",
+    "effects": [
+      { "target": "StatsComponent", "attribute": "wisdom", "value": -1 }
+    ]
+  },
+  "ability_drain_charisma": {
+    "name": "Charisma Drained",
+    "effects": [
+      { "target": "StatsComponent", "attribute": "charisma", "value": -2 }
+    ]
+  },
+  "blindness": {
+    "name": "Blinded",
+    "effects": [
+      { "target": "state", "flag": "blinded", "value": true }
+    ]
+  },
+  "charm": {
+    "name": "Charmed",
+    "effects": [
+      { "target": "state", "flag": "charmed", "value": true }
+    ]
+  },
+  "confusion": {
+    "name": "Confused",
+    "effects": [
+      { "target": "state", "flag": "confused", "value": true }
+    ]
+  },
+  "attack_and_save_penalty": {
+    "name": "Hindered",
+    "effects": [
+      { "target": "CombatComponent", "attribute": "thac0", "value": 2 },
+      { "target": "CombatComponent", "attribute": "save_penalty", "value": 2 }
+    ]
+  },
+  "curse_penalty": {
+    "name": "Cursed",
+    "effects": [
+      { "target": "CombatComponent", "attribute": "thac0", "value": 4 },
+      { "target": "CombatComponent", "attribute": "save_penalty", "value": 2 }
+    ]
+  },
+  "curse_stat_reduction": {
+    "name": "Cursed",
+    "effects": [
+      { "target": "state", "flag": "cursed_stat_reduction", "value": true }
+    ]
+  },
+  "deafness": {
+    "name": "Deafened",
+    "effects": [
+      { "target": "state", "flag": "deafened", "value": true }
+    ]
+  },
+  "disease_mummy_rot": {
+    "name": "Diseased",
+    "effects": [
+      { "target": "state", "flag": "mummy_rot", "value": true }
+    ]
+  },
+  "disease_generic": {
+    "name": "Diseased",
+    "effects": [
+      { "target": "state", "flag": "diseased", "value": true }
+    ]
+  },
+  "energy_drain_1": {
+    "name": "Energy Drained",
+    "effects": [
+      { "target": "state", "flag": "energy_drained", "value": 1 }
+    ]
+  },
+  "energy_drain_2": {
+    "name": "Energy Drained",
+    "effects": [
+      { "target": "state", "flag": "energy_drained", "value": 2 }
+    ]
+  },
+  "fascination": {
+    "name": "Fascinated",
+    "effects": [
+      { "target": "state", "flag": "fascinated", "value": true }
+    ]
+  },
+  "feeblemind": {
+    "name": "Feebleminded",
+    "effects": [
+      { "target": "state", "flag": "feebleminded", "value": true }
+    ]
+  },
+  "nausea_stench": {
+    "name": "Nauseous",
+    "effects": [
+      { "target": "CombatComponent", "attribute": "thac0", "value": 2 }
+    ]
+  },
+  "paralysis": {
+    "name": "Paralyzed",
+    "effects": [
+      { "target": "state", "flag": "paralyzed", "value": true }
+    ]
+  },
+  "petrification": {
+    "name": "Petrified",
+    "effects": [
+      { "target": "state", "flag": "petrified", "value": true }
+    ]
+  },
+  "poison_lethal": {
+    "name": "Poisoned",
+    "effects": [
+      { "target": "state", "flag": "lethally_poisoned", "value": true }
+    ]
+  },
+  "poison_sickness": {
+    "name": "Poisoned",
+    "effects": [
+      { "target": "state", "flag": "sickened", "value": true }
+    ]
+  },
+  "possession": {
+    "name": "Possessed",
+    "effects": [
+      { "target": "state", "flag": "possessed", "value": true }
+    ]
+  },
+  "slowness": {
+    "name": "Slowed",
+    "effects": [
+      { "target": "state", "flag": "slowed", "value": true }
+    ]
+  },
+  "stun": {
+    "name": "Stunned",
+    "effects": [
+      { "target": "state", "flag": "stunned", "value": true }
+    ]
+  },
+  "swallowed_whole": {
+    "name": "Swallowed Whole",
+    "effects": [
+      { "target": "state", "flag": "swallowed_whole", "value": true }
+    ]
+  },
+  "unconsciousness": {
+    "name": "Unconscious",
+    "effects": [
+      { "target": "state", "flag": "unconscious", "value": true }
+    ]
+  },
+  "weakness": {
+    "name": "Weakened",
+    "effects": [
+      { "target": "CombatComponent", "attribute": "thac0", "value": 2 },
+      { "target": "CombatComponent", "attribute": "damage_modifier", "value": -2 }
+    ]
+  }
+}

@@ -2,7 +2,9 @@
 # Defines all the logic systems for the ECS.
 
 import pygame
+import random
 from components import *
+import random  # Import the 'random' module
 
 class System:
     """A base class for systems. Systems contain logic that operates on entities with specific components."""
@@ -40,6 +42,8 @@ class InputSystem(System):
                         self.handle_player_movement(event, player_id)
                     elif event.key == pygame.K_g:
                         self.handle_pickup(player_id)
+                    elif event.key == pygame.K_a:
+                        self.handle_attack(player_id)
 
     def handle_player_movement(self, event, player_id):
         dx, dy = 0, 0
@@ -69,6 +73,26 @@ class InputSystem(System):
         item_id = self.world.get_item_at_position(player_pos.x, player_pos.y)
         if item_id and self.world.get_component(item_id, ItemComponent):
             self.world.add_component(player_id, WantsToPickupItemComponent(item_id))
+
+    def handle_attack(self, player_id):
+        player_pos = self.world.get_component(player_id, PositionComponent)
+        
+        # Check adjacent tiles for a monster
+        adjacent_tiles = [
+            (player_pos.x + 1, player_pos.y),
+            (player_pos.x - 1, player_pos.y),
+            (player_pos.x, player_pos.y + 1),
+            (player_pos.x, player_pos.y - 1),
+        ]
+        
+        for x, y in adjacent_tiles:
+            target_id = self.world.get_entity_at_position(x, y)
+            if target_id and self.world.get_component(target_id, FactionComponent).name == "monsters":
+                # Found a monster, create an attack intent
+                self.world.add_component(player_id, WantsToAttackComponent(target_id))
+                return  # Attack only one monster at a time
+        
+        # If no monster found, you could add a "no target" message
 
 class MovementSystem(System):
     """Processes movement requests, handling collisions and interactions."""
@@ -107,6 +131,8 @@ class MovementSystem(System):
 class ActionSystem(System):
     """Processes complex actions like picking up items and unlocking things."""
     def update(self, *args, **kwargs):
+        self.player_acted = False
+        self.monster_acting = False
         game_state = kwargs.get('game_state')
 
         # Process pickup intents
@@ -126,6 +152,9 @@ class ActionSystem(System):
                 game_state.add_message(f"You pick up the {item_desc.text}.")
 
             self.world.remove_component(entity_id, WantsToPickupItemComponent)
+            if self.world.get_component(entity_id, PlayerControllableComponent):
+                self.player_acted = True
+
 
         # Process open intents
         for entity_id in self.world.get_entities_with_components(WantsToOpenComponent):
@@ -139,6 +168,9 @@ class ActionSystem(System):
                 self.try_unlock(entity_id, target_id, lockable, game_state)
             elif openable:
                 self.open_target(target_id, openable, game_state)
+
+            if self.world.get_component(entity_id, PlayerControllableComponent):
+                self.player_acted = True
 
             self.world.remove_component(entity_id, WantsToOpenComponent)
 
@@ -185,6 +217,65 @@ class ActionSystem(System):
         renderable = self.world.get_component(target_id, RenderableComponent)
         if renderable and renderable.open_char:
             renderable.char = renderable.open_char
+
+
+class CombatSystem(System):
+    """Handles combat between entities."""
+    def update(self, *args, **kwargs):
+        game_state = kwargs.get('game_state')
+
+        for attacker_id in self.world.get_entities_with_components(WantsToAttackComponent):
+            intent = self.world.get_component(attacker_id, WantsToAttackComponent)
+            target_id = intent.target_id
+
+            # Get components for attacker and defender
+            attacker_desc = self.world.get_component(attacker_id, DescriptionComponent)
+            defender_desc = self.world.get_component(target_id, DescriptionComponent)
+            attacker_combat = self.world.get_component(attacker_id, CombatComponent)
+            defender_combat = self.world.get_component(target_id, CombatComponent)
+
+            if not all([attacker_desc, defender_desc, attacker_combat, defender_combat]):
+                self.world.remove_component(attacker_id, WantsToAttackComponent)
+                continue
+
+            # Determine names for messaging
+            attacker_name = "You" if self.world.get_component(attacker_id, PlayerControllableComponent) else attacker_desc.text
+            defender_name = "you" if self.world.get_component(target_id, PlayerControllableComponent) else f"the {defender_desc.text}"
+
+            # Resolve attack
+            attack_roll = random.randint(1, 20)
+            if attack_roll >= (attacker_combat.thac0 - defender_combat.ac):
+                damage = random.randint(1, 6)  # 1d6 damage for now
+                defender_combat.hp -= damage
+                game_state.add_message(f"{attacker_name} hit {defender_name} for {damage} damage!")
+
+                if defender_combat.hp <= 0:
+                    game_state.add_message(f"The {defender_desc.text} dies!")
+                    # TODO: Implement proper entity death (remove entity, leave corpse, etc.)
+            else:
+                game_state.add_message(f"{attacker_name} miss {defender_name}.")
+
+            # An attack is an action, so we mark it for the turn-based system
+            if self.world.get_component(attacker_id, PlayerControllableComponent):
+                self.world.get_system(ActionSystem).player_acted = True
+
+            self.world.remove_component(attacker_id, WantsToAttackComponent)
+        # Monster actions (simplified for now - just move randomly)  
+        if game_state.game_state == 'MONSTER_TURN':
+            monster_entities = self.world.get_entities_with_components(
+                PositionComponent, CombatComponent, FactionComponent
+            )
+
+            for entity_id in monster_entities:
+                if self.world.get_component(entity_id, PlayerControllableComponent):
+                    continue  # Skip player
+                if self.world.get_component(entity_id, FactionComponent).name != "monsters":
+                    continue
+                self.monster_acting = True
+                dx, dy = random.choice([(0, 1), (0, -1), (1, 0), (-1, 0), (0,0)])  # Simple random movement
+                if dx != 0 or dy != 0:
+                    self.world.add_component(entity_id, WantsToMoveComponent(dx, dy))
+
 
 class RenderSystem(System):
     """Handles all rendering logic."""

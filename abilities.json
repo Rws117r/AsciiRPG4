@@ -1,0 +1,201 @@
+{
+  "shadow_touch": {
+    "type": "on_attack",
+    "effect": "apply_status",
+    "chance": 1.0,
+    "status_effect": {
+      "id": "ability_drain_strength",
+      "type": "permanent",
+      "on_apply_message": "feels weaker from the shadow's touch!"
+    }
+  },
+  "lamia_touch": {
+    "type": "on_attack",
+    "effect": "apply_status",
+    "chance": 1.0,
+    "status_effect": {
+      "id": "ability_drain_wisdom",
+      "type": "permanent",
+      "on_apply_message": "feels their mind cloud from the lamia's touch!"
+    }
+  },
+  "spitting_cobra_venom": {
+    "type": "on_attack",
+    "effect": "apply_status",
+    "chance": 0.5,
+    "status_effect": {
+      "id": "blindness",
+      "type": "permanent",
+      "on_apply_message": "is blinded by the cobra's venom!"
+    }
+  },
+  "dark_creeper_combustion": {
+    "type": "on_death",
+    "effect": "apply_status_aoe",
+    "chance": 1.0,
+    "status_effect": {
+      "id": "blindness",
+      "type": "temporary",
+      "duration": "1d6",
+      "on_apply_message": "is blinded by a flash of light!"
+    }
+  },
+  "harpy_song": {
+    "type": "aura",
+    "effect": "apply_status",
+    "chance": 0.4,
+    "status_effect": {
+      "id": "charm",
+      "type": "temporary",
+      "duration": "2d6",
+      "on_apply_message": "is entranced by the harpy's song!"
+    }
+  },
+  "gibbering_mouther_babble": {
+    "type": "aura",
+    "effect": "apply_status",
+    "chance": 0.5,
+    "status_effect": {
+      "id": "confusion",
+      "type": "temporary",
+      "duration": "1d8",
+      "on_apply_message": "is driven to confusion by the incessant babbling!"
+    }
+  },
+  "bat_swarm_attack": {
+    "type": "on_attack",
+    "effect": "apply_status",
+    "chance": 1.0,
+    "status_effect": {
+      "id": "attack_and_save_penalty",
+      "type": "cumulative",
+      "duration": 1,
+      "on_apply_message": "is swarmed by bats!"
+    }
+  },
+  "cyclops_curse": {
+    "type": "on_attack",
+    "effect": "apply_status",
+    "chance": 0.1,
+    "status_effect": {
+      "id": "curse_penalty",
+      "type": "permanent",
+      "on_apply_message": "is cursed by the cyclops!"
+    }
+  },
+  "dragonne_roar_deafen": {
+    "type": "on_special",
+    "effect": "apply_status_aoe",
+    "chance": 1.0,
+    "status_effect": {
+      "id": "deafness",
+      "type": "temporary",
+      "duration": "2d6",
+      "on_apply_message": "is deafened by the powerful roar!"
+    }
+  },
+  "mummy_touch": {
+    "type": "on_attack",
+    "effect": "apply_status",
+    "chance": 0.25,
+    "status_effect": {
+      "id": "disease_mummy_rot",
+      "type": "permanent",
+      "on_apply_message": "is afflicted with mummy rot!"
+    }
+  },
+  "rat_bite": {
+    "type": "on_attack",
+    "effect": "apply_status",
+    "chance": 0.05,
+    "status_effect": {
+      "id": "disease_generic",
+      "type": "permanent",
+      "on_apply_message": "has contracted a disease!"
+    }
+  },
+  "wight_touch": {
+    "type": "on_attack",
+    "effect": "apply_status",
+    "chance": 1.0,
+    "status_effect": {
+      "id": "energy_drain_1",
+      "type": "permanent",
+      "on_apply_message": "feels a deathly chill from the wight's touch!"
+    }
+  },
+  "vampire_touch": {
+    "type": "on_attack",
+    "effect": "apply_status",
+    "chance": 1.0,
+    "status_effect": {
+      "id": "energy_drain_2",
+      "type": "permanent",
+      "on_apply_message": "feels their life force drained away!"
+    }
+  },
+  "ghast_stench": {
+    "type": "aura",
+    "effect": "apply_status",
+    "chance": 1.0,
+    "status_effect": {
+      "id": "nausea_stench",
+      "type": "temporary",
+      "duration": 1,
+      "on_apply_message": "is overcome by the ghast's stench!"
+    }
+  },
+  "ghoul_touch": {
+    "type": "on_attack",
+    "effect": "apply_status",
+    "chance": 0.3,
+    "status_effect": {
+      "id": "paralysis",
+      "type": "temporary",
+      "duration": "2d4",
+      "on_apply_message": "is paralyzed by the ghoul's chilling touch!"
+    }
+  },
+  "basilisk_gaze": {
+    "type": "on_gaze",
+    "effect": "apply_status",
+    "chance": 1.0,
+    "status_effect": {
+      "id": "petrification",
+      "type": "permanent",
+      "on_apply_message": "is turned to stone by the basilisk's gaze!"
+    }
+  },
+  "copper_dragon_breath": {
+    "type": "on_special",
+    "effect": "apply_status_aoe",
+    "chance": 1.0,
+    "status_effect": {
+      "id": "slowness",
+      "type": "temporary",
+      "duration": 6,
+      "on_apply_message": "is slowed by a cloud of gas!"
+    }
+  },
+  "purple_worm_swallow": {
+    "type": "on_attack_critical",
+    "effect": "apply_status",
+    "chance": 1.0,
+    "status_effect": {
+      "id": "swallowed_whole",
+      "type": "permanent",
+      "on_apply_message": "is swallowed whole!"
+    }
+  },
+  "sea_hag_gaze": {
+    "type": "on_gaze",
+    "effect": "apply_status",
+    "chance": 0.75,
+    "status_effect": {
+      "id": "weakness",
+      "type": "temporary",
+      "duration": "1d6",
+      "on_apply_message": "is weakened by the hag's horrible gaze!"
+    }
+  }
+}
