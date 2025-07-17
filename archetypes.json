@@ -23,7 +23,8 @@
   "Item": {
     "inherits": "InanimateObject",
     "components": {
-      "ItemComponent": { "material": "steel" }
+      "ItemComponent": {},
+      "MaterialComponent": { "name": "steel" }
     }
   },
   "Creature": {
@@ -31,7 +32,8 @@
     "components": {
       "StatsComponent": { "strength": 10, "intelligence": 10, "wisdom": 10, "dexterity": 10, "constitution": 10, "charisma": 10 },
       "CanEquipComponent": {},
-      "EquipmentComponent": {}
+      "EquipmentComponent": {},
+      "InventoryComponent": {}
     }
   },
   "Humanoid": {

@@ -1,0 +1,14 @@
+{
+  "steel": {
+    "hardness": 10
+  },
+  "leather": {
+    "hardness": 5
+  },
+  "gold": {
+    "hardness": 3
+  },
+  "wood": {
+    "hardness": 4
+  }
+}

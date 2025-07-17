@@ -10,8 +10,7 @@
         "DescriptionComponent": { "text": "This is you, the brave adventurer." },
         "StatsComponent": { "strength": 13, "intelligence": 12, "wisdom": 10, "dexterity": 14, "constitution": 15, "charisma": 9 },
         "CombatComponent": { "hp": 8, "ac": 7, "thac0": 19 },
-        "FactionComponent": { "name": "player" },
-        "InventoryComponent": { "items": [] }
+        "FactionComponent": { "name": "player" }
       }
     },
     {

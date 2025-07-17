@@ -19,7 +19,6 @@ class RenderableComponent(Component):
         self.open_char = open_char
         self.closed_char = closed_char
 
-
 class PlayerControllableComponent(Component):
     """A tag component to identify the entity controlled by the player."""
     pass
@@ -70,10 +69,14 @@ class EquipmentComponent(Component):
     def __init__(self):
         self.slots = {"weapon": None, "armor": None, "amulet": None}
 
+class MaterialComponent(Component):
+    """Defines the material an entity is made of."""
+    def __init__(self, name):
+        self.name = name
+
 class ItemComponent(Component):
-    """A component for items, defining their material properties."""
-    def __init__(self, material):
-        self.material = material
+    """A tag component for items that can be picked up."""
+    pass
 
 class FactionComponent(Component):
     """A component to define an entity's faction."""
@@ -95,6 +98,13 @@ class KeyComponent(Component):
     """A component for key items."""
     def __init__(self, key_id=None):
         self.key_id = key_id
+
+class PadlockComponent(Component):
+    """A component for lock items."""
+    def __init__(self, is_locked=True, key_id=None, attached_to=None):
+        self.is_locked = is_locked
+        self.key_id = key_id
+        self.attached_to = attached_to
 
 class OpenableComponent(Component):
     """A component for things that can be opened and closed."""

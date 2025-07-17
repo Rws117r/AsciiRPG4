@@ -7,7 +7,8 @@
         "PositionComponent": { "x": 7, "y": 7 },
         "RenderableComponent": { "char": "/", "color": "WHITE" },
         "DescriptionComponent": { "text": "A trusty steel sword." },
-        "ItemComponent": { "material": "steel" }
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "steel" }
       }
     },
     {
@@ -17,7 +18,8 @@
         "PositionComponent": { "x": 8, "y": 7 },
         "RenderableComponent": { "char": "[", "color": "WHITE" },
         "DescriptionComponent": { "text": "A suit of sturdy leather armor." },
-        "ItemComponent": { "material": "leather" }
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "leather" }
       }
     },
     {
@@ -27,106 +29,91 @@
         "PositionComponent": { "x": 9, "y": 7 },
         "RenderableComponent": { "char": "\"", "color": "YELLOW" },
         "DescriptionComponent": { "text": "A simple amulet that offers protection." },
-        "ItemComponent": { "material": "gold" }
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "gold" }
       }
     },
     {
-        "name": "Wooden Chest",
-        "inherits": ["Container", "Lockable"],
-        "components": {
-            "PositionComponent": { "x": 10, "y": 10 },
-            "RenderableComponent": { "char": "=", "color": "WHITE" },
-            "DescriptionComponent": { "text": "A sturdy wooden chest. It appears to be locked." },
-            "ItemComponent": { "material": "wood" },
-            "ContainerComponent": { "contents": ["Healing Potion"] }
-        }
+      "name": "Iron Padlock",
+      "inherits": "Padlock",
+      "components": {
+        "PositionComponent": { "x": 14, "y": 8 },
+        "RenderableComponent": { "char": "&", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A heavy iron padlock." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "steel" },
+        "PadlockComponent": { "is_locked": true, "key_id": "iron_key_01", "attached_to": "Steel Chest" }
+      }
     },
     {
-        "name": "Steel Chest",
-        "inherits": ["Container", "Lockable"],
-        "components": {
-            "PositionComponent": { "x": 14, "y": 8 },
-            "RenderableComponent": { "char": "=", "color": "WHITE" },
-            "DescriptionComponent": { "text": "A heavy steel chest. It appears to be locked." },
-            "ItemComponent": { "material": "steel" },
-            "ContainerComponent": { "contents": ["Gold Coins"] }
-        }
+      "name": "Silver Padlock",
+      "inherits": "Padlock",
+      "components": {
+        "PositionComponent": { "x": 10, "y": 10 },
+        "RenderableComponent": { "char": "&", "color": "WHITE" },
+        "DescriptionComponent": { "text": "An ornate silver padlock." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "steel" },
+        "PadlockComponent": { "is_locked": true, "key_id": "silver_key_01", "attached_to": "Wooden Chest" }
+      }
     },
     {
-        "name": "Iron Padlock",
-        "inherits": "Padlock",
-        "components": {
-            "PositionComponent": { "x": 14, "y": 8 },
-            "RenderableComponent": { "char": "&", "color": "WHITE" },
-            "DescriptionComponent": { "text": "A heavy iron padlock." },
-            "ItemComponent": { "material": "steel" },
-            "PadlockComponent": { "is_locked": true, "key_id": "iron_key_01", "attached_to": "Steel Chest" }
-        }
+      "name": "Door Lock",
+      "inherits": "Padlock",
+      "components": {
+        "PositionComponent": { "x": 12, "y": 5 },
+        "RenderableComponent": { "char": "&", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A sturdy door lock." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "steel" },
+        "PadlockComponent": { "is_locked": true, "key_id": "door_key_01", "attached_to": "Wooden Door" }
+      }
     },
     {
-        "name": "Silver Padlock",
-        "inherits": "Padlock",
-        "components": {
-            "PositionComponent": { "x": 10, "y": 10 },
-            "RenderableComponent": { "char": "&", "color": "WHITE" },
-            "DescriptionComponent": { "text": "An ornate silver padlock." },
-            "ItemComponent": { "material": "steel" },
-            "PadlockComponent": { "is_locked": true, "key_id": "silver_key_01", "attached_to": "Wooden Chest" }
-        }
+      "name": "Iron Key",
+      "inherits": "Key",
+      "components": {
+        "PositionComponent": { "x": 3, "y": 3 },
+        "RenderableComponent": { "char": "'", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A small iron key." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "steel" },
+        "KeyComponent": { "key_id": "iron_key_01" }
+      }
     },
     {
-        "name": "Door Lock",
-        "inherits": "Padlock",
-        "components": {
-            "PositionComponent": { "x": 12, "y": 5 },
-            "RenderableComponent": { "char": "&", "color": "WHITE" },
-            "DescriptionComponent": { "text": "A sturdy door lock." },
-            "ItemComponent": { "material": "steel" },
-            "PadlockComponent": { "is_locked": true, "key_id": "door_key_01", "attached_to": "Wooden Door" }
-        }
+      "name": "Silver Key",
+      "inherits": "Key",
+      "components": {
+        "PositionComponent": { "x": 18, "y": 14 },
+        "RenderableComponent": { "char": "'", "color": "WHITE" },
+        "DescriptionComponent": { "text": "An ornate silver key." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "steel" },
+        "KeyComponent": { "key_id": "silver_key_01" }
+      }
     },
     {
-        "name": "Iron Key",
-        "inherits": "Key",
-        "components": {
-            "PositionComponent": { "x": 3, "y": 3 },
-            "RenderableComponent": { "char": "'", "color": "WHITE" },
-            "DescriptionComponent": { "text": "A small iron key." },
-            "ItemComponent": { "material": "steel" },
-            "KeyComponent": { "key_id": "iron_key_01" }
-        }
+      "name": "Door Key",
+      "inherits": "Key",
+      "components": {
+        "PositionComponent": { "x": 1, "y": 1 },
+        "RenderableComponent": { "char": "'", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A heavy iron key." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "steel" },
+        "KeyComponent": { "key_id": "door_key_01" }
+      }
     },
     {
-        "name": "Silver Key",
-        "inherits": "Key",
-        "components": {
-            "PositionComponent": { "x": 18, "y": 14 },
-            "RenderableComponent": { "char": "'", "color": "WHITE" },
-            "DescriptionComponent": { "text": "An ornate silver key." },
-            "ItemComponent": { "material": "steel" },
-            "KeyComponent": { "key_id": "silver_key_01" }
-        }
-    },
-    {
-        "name": "Door Key",
-        "inherits": "Key",
-        "components": {
-            "PositionComponent": { "x": 1, "y": 1 },
-            "RenderableComponent": { "char": "'", "color": "WHITE" },
-            "DescriptionComponent": { "text": "A heavy iron key." },
-            "ItemComponent": { "material": "steel" },
-            "KeyComponent": { "key_id": "door_key_01" }
-        }
-    },
-    {
-        "name": "Wooden Door",
-        "inherits": "Door",
-        "components": {
-            "PositionComponent": { "x": 12, "y": 5 },
-            "RenderableComponent": { "char": "+", "color": "WHITE" },
-            "DescriptionComponent": { "text": "A solid wooden door. It appears to be closed and locked." },
-            "ItemComponent": { "material": "wood" }
-        }
+      "name": "Wooden Door",
+      "inherits": "Door",
+      "components": {
+        "PositionComponent": { "x": 12, "y": 5 },
+        "RenderableComponent": { "char": "+", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A solid wooden door. It appears to be closed and locked." },
+        "MaterialComponent": { "name": "wood" }
+      }
     }
   ]
 }

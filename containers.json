@@ -1,0 +1,20 @@
+{
+  "Wooden Chest": {
+    "inherits": ["Container", "Lockable"],
+    "components": {
+      "RenderableComponent": { "char": "=", "color": "WHITE" },
+      "DescriptionComponent": { "text": "A sturdy wooden chest." },
+      "MaterialComponent": { "name": "wood" },
+      "ContainerComponent": { "contents": ["Healing Potion"] }
+    }
+  },
+  "Steel Chest": {
+    "inherits": ["Container", "Lockable"],
+    "components": {
+      "RenderableComponent": { "char": "=", "color": "WHITE" },
+      "DescriptionComponent": { "text": "A heavy steel chest." },
+      "MaterialComponent": { "name": "steel" },
+      "ContainerComponent": { "contents": ["Gold Coins"] }
+    }
+  }
+}

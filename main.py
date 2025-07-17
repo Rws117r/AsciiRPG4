@@ -6,7 +6,9 @@ import sys
 import os
 import json
 import copy
-import components 
+import random
+import components
+import factory
 from systems import InputSystem, MovementSystem, RenderSystem, ActionSystem
 
 # --- Core ECS Classes ---
@@ -59,16 +61,21 @@ class World:
             except KeyError:
                 return []
         return list(entity_ids)
-    
+
     def get_entity_at_position(self, x, y):
-        """Finds an entity at a specific grid location, ignoring items (which can be walked on)."""
         for entity_id in self.get_entities_with_components(components.PositionComponent):
             if self.get_component(entity_id, components.CursorComponent): continue
-            
             pos = self.get_component(entity_id, components.PositionComponent)
             if pos.x == x and pos.y == y:
                 if self.get_component(entity_id, components.ItemComponent):
                     continue
+                return entity_id
+        return None
+
+    def get_item_at_position(self, x, y):
+        for entity_id in self.get_entities_with_components(components.PositionComponent, components.ItemComponent):
+            pos = self.get_component(entity_id, components.PositionComponent)
+            if pos.x == x and pos.y == y:
                 return entity_id
         return None
 
@@ -78,6 +85,7 @@ class World:
     def update(self, *args, **kwargs):
         for system in self.systems:
             system.update(*args, **kwargs)
+
 
 # --- Main Game Class ---
 class Game:
@@ -113,7 +121,6 @@ class Game:
             return pygame.font.Font(None, self.FONT_SIZE)
 
     def load_json_file(self, file_path):
-        """Helper to load a single JSON file."""
         try:
             with open(file_path, 'r') as f:
                 return json.load(f)
@@ -122,19 +129,15 @@ class Game:
             return None
 
     def get_archetype_data(self, archetype_name):
-        """Recursively gathers component data from a single archetype and its parent chain."""
         if archetype_name not in self.world.archetypes:
             print(f"Warning: Archetype '{archetype_name}' not found.")
             return {}
-
         archetype = self.world.archetypes[archetype_name]
-        
         parent_components = {}
         if "inherits" in archetype:
             parent_names = archetype["inherits"]
             if not isinstance(parent_names, list):
                 parent_names = [parent_names]
-            
             for name in parent_names:
                 components_from_parent = self.get_archetype_data(name)
                 for comp_name, comp_args in components_from_parent.items():
@@ -142,44 +145,41 @@ class Game:
                          parent_components[comp_name].update(comp_args)
                     else:
                         parent_components[comp_name] = comp_args
-
         final_components = copy.deepcopy(parent_components)
         for comp_name, comp_args in archetype.get("components", {}).items():
             if comp_name in final_components and isinstance(final_components.get(comp_name), dict) and isinstance(comp_args, dict):
                 final_components[comp_name].update(comp_args)
             else:
                 final_components[comp_name] = comp_args
-            
         return final_components
 
     def create_entities_from_definitions(self, entity_definitions):
-        """Creates entities in the world based on a list of definitions."""
         for entity_def in entity_definitions:
             final_components = {}
-            
             inherits_list = entity_def.get("inherits", "Abstract")
             if not isinstance(inherits_list, list):
                 inherits_list = [inherits_list]
-
             for archetype_name in inherits_list:
                 archetype_data = self.get_archetype_data(archetype_name)
-                final_components.update(archetype_data)
-            
+                for comp_name, comp_args in archetype_data.items():
+                    if comp_name in final_components and isinstance(final_components.get(comp_name), dict) and isinstance(comp_args, dict):
+                        final_components[comp_name].update(comp_args)
+                    else:
+                        final_components[comp_name] = comp_args
             for comp_name, comp_args in entity_def.get("components", {}).items():
                 if comp_name in final_components and isinstance(final_components.get(comp_name), dict) and isinstance(comp_args, dict):
                     final_components[comp_name].update(comp_args)
                 else:
                     final_components[comp_name] = comp_args
-
             entity = self.world.create_entity()
-            print(f"Created entity '{entity_def.get('name', 'Unnamed')}' with ID {entity.id}")
-            
+            # Use the specific name from the definition if available, otherwise use the inherited name
+            entity_name = entity_def.get('name', inherits_list[0] if inherits_list else 'Unnamed')
+            print(f"Created entity '{entity_name}' with ID {entity.id}")
             for comp_name, comp_args in final_components.items():
                 try:
                     comp_class = getattr(components, comp_name)
                     if comp_name == "RenderableComponent" and "color" in comp_args:
                         comp_args["color"] = self.COLORS.get(comp_args["color"].upper(), self.COLORS["WHITE"])
-                    
                     component_instance = comp_class(**copy.deepcopy(comp_args))
                     self.world.add_component(entity.id, component_instance)
                 except AttributeError:
@@ -187,16 +187,44 @@ class Game:
                 except TypeError as e:
                     print(f"Warning: Could not create component '{comp_name}' with args {comp_args}. Error: {e}")
 
+    def create_entity_from_archetype(self, archetype_name, component_overrides={}):
+        """Creates a single entity from an archetype, allowing for component overrides."""
+        # This function now correctly uses the term 'archetype_name' to look up a blueprint
+        # in the master catalog, which can be a core archetype or a specific template.
+        entity_def = {
+            "name": archetype_name,
+            "inherits": archetype_name,
+            "components": component_overrides
+        }
+        self.create_entities_from_definitions([entity_def])
+
     def setup(self):
         """Load all game data and initialize systems."""
-        self.world.materials = self.load_json_file('materials.json') or {}
+        # Load base archetypes
         self.world.archetypes = self.load_json_file('archetypes.json') or {}
+        
+        # Load specific templates and merge them into the main archetypes catalog
+        container_templates = self.load_json_file('containers.json') or {}
+        self.world.archetypes.update(container_templates)
+        
+        item_templates = self.load_json_file('item_templates.json') or {}
+        self.world.archetypes.update(item_templates)
+
+        # Load materials
+        self.world.materials = self.load_json_file('materials.json') or {}
+        
+        # Load hand-crafted entity instances from their own files
         creatures_data = self.load_json_file('creatures.json') or {"entities": []}
         items_data = self.load_json_file('items.json') or {"entities": []}
 
         if creatures_data: self.create_entities_from_definitions(creatures_data["entities"])
         if items_data: self.create_entities_from_definitions(items_data["entities"])
         
+        # Use the factory to create procedural content
+        factory.create_locked_container_and_key(self, 'Wooden Chest', 'Silver Key', container_pos=(10, 10), key_pos=(18, 14))
+        factory.create_locked_container_and_key(self, 'Steel Chest', 'Iron Key', container_pos=(14, 8), key_pos=(3, 3))
+
+        # Initialize systems
         self.world.add_system(InputSystem(self.world))
         self.world.add_system(MovementSystem(self.world))
         self.world.add_system(ActionSystem(self.world))
@@ -213,7 +241,6 @@ class Game:
         self.world.add_component(cursor.id, components.CursorComponent())
 
     def toggle_look_mode(self):
-        """Activates or deactivates the look mode."""
         self.look_mode = not self.look_mode
         if self.look_mode:
             player_entities = self.world.get_entities_with_components(components.PlayerControllableComponent)
