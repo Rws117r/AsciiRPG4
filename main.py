@@ -9,7 +9,7 @@ import copy
 import random
 import components
 import factory
-from systems import InputSystem, MovementSystem, RenderSystem, ActionSystem, CombatSystem  # Import CombatSystem
+from systems import InputSystem, MovementSystem, RenderSystem, ActionSystem, CombatSystem, AISystem  # Import CombatSystem, AISystem
 
 # --- Core ECS Classes ---
 class Entity:
@@ -240,6 +240,7 @@ class Game:
         self.world.add_system(InputSystem(self.world))
         self.world.add_system(MovementSystem(self.world))
         self.world.add_system(ActionSystem(self.world))
+        self.world.add_system(AISystem(self.world)) # Add the AISystem
         self.world.add_system(CombatSystem(self.world))
         self.world.add_system(RenderSystem(self.world, self.screen, self.font, self.TILE_SIZE))
         

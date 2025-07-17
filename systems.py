@@ -435,3 +435,45 @@ class RenderSystem(System):
             inst_rect = inst_surface.get_rect(centerx=inventory_x + self.inventory_width // 2, y=y_offset)
             self.screen.blit(inst_surface, inst_rect)
             y_offset += 25
+
+
+class AISystem(System):
+    """Controls the actions of non-player entities."""
+    def update(self, *args, **kwargs):
+        game_state = kwargs['game_state']
+        if game_state.game_state != 'MONSTER_TURN':
+            return  # Only act on monster turn
+
+        player_entity = self.world.get_entities_with_components(PlayerControllableComponent)
+        if not player_entity: return
+        player_id = player_entity[0]
+        player_pos = self.world.get_component(player_id, PositionComponent)
+
+        for entity_id in self.world.get_entities_with_components(FactionComponent, PositionComponent):
+            faction = self.world.get_component(entity_id, FactionComponent)
+            if faction.name != "monsters":
+                continue  # Only control monsters
+
+            monster_pos = self.world.get_component(entity_id, PositionComponent)
+
+            # Check if player is within sight (10 tiles for now)
+            distance = max(abs(player_pos.x - monster_pos.x), abs(player_pos.y - monster_pos.y))
+            if distance <= 10:
+                # Check for adjacency
+                if distance == 1:
+                    # Attack the player
+                    self.world.add_component(entity_id, WantsToAttackComponent(player_id))
+                else:
+                    # Move towards the player (very basic movement for now)
+                    dx, dy = 0, 0
+                    if player_pos.x > monster_pos.x:
+                        dx = 1
+                    elif player_pos.x < monster_pos.x:
+                        dx = -1
+                    if player_pos.y > monster_pos.y:
+                        dy = 1
+                    elif player_pos.y < monster_pos.y:
+                        dy = -1
+                    self.world.add_component(entity_id, WantsToMoveComponent(dx, dy))
+            # If the player is not in sight, monsters will continue with random movement from ActionSystem
+            # (or we could add more complex "wandering" behavior here later).
