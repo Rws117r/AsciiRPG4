@@ -220,15 +220,7 @@ class ExperienceComponent(Component):
     def __init__(self, current_xp=0, level=1):
         self.current_xp = current_xp
         self.level = level
-        self.xp_to_next_level = self.calculate_xp_needed(level + 1)
-
-    def calculate_xp_needed(self, for_level):
-        """
-        Calculates XP needed for a given level (based on OSE Fighter progression).
-        e.g., Level 2: 2,000, Level 3: 4,000, etc.
-        """
-        if for_level <= 1: return 0
-        return 2000 * (2 ** (for_level - 2))
+        self.xp_to_next_level = 0  # Will be set by character creation/leveling system
 
 # Phase 1 Addition: New component for ability usage
 class WantsToUseAbilityComponent(Component):
@@ -237,3 +229,33 @@ class WantsToUseAbilityComponent(Component):
         self.ability_id = ability_id
         self.target_id = target_id
         self.target_position = target_position  # For ground-targeted abilities
+
+# Phase 3 Additions: Character creation and progression components
+class ClassComponent(Component):
+    """Tracks the character's class."""
+    def __init__(self, class_name):
+        self.class_name = class_name
+
+class SpellSlotsComponent(Component):
+    """Tracks spell slots for spellcasting characters."""
+    def __init__(self):
+        self.slots = {}  # {spell_level: max_slots}
+        self.slots_used = {}  # {spell_level: used_slots}
+        
+    def can_cast(self, spell_level):
+        """Check if can cast a spell of given level."""
+        max_slots = self.slots.get(spell_level, 0)
+        used_slots = self.slots_used.get(spell_level, 0)
+        return used_slots < max_slots
+    
+    def use_slot(self, spell_level):
+        """Use a spell slot of given level."""
+        if self.can_cast(spell_level):
+            self.slots_used[spell_level] = self.slots_used.get(spell_level, 0) + 1
+            return True
+        return False
+    
+    def rest(self):
+        """Restore all spell slots (after rest)."""
+        for level in self.slots:
+            self.slots_used[level] = 0

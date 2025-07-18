@@ -16,7 +16,7 @@ class WorldViewer:
         pygame.init()
         self.WINDOW_WIDTH, self.WINDOW_HEIGHT = 1280, 720
         self.TILE_SIZE, self.FONT_SIZE = 16, 16
-        self.FONT_NAME = 'JetBrainsMonoNL-Regular.ttf'
+        self.FONT_NAME = 'JetBrainsMonoNerdFontMono-Regular.ttf'
         self.FPS = 60
         self.COLORS = {"WHITE": (255, 255, 255), "YELLOW": (255, 255, 0)}
 
@@ -30,7 +30,7 @@ class WorldViewer:
             'ocean': {'char': '~', 'color': (0, 0, 255)},
             'beach': {'char': '.', 'color': (210, 180, 140)},
             'plains': {'char': '.', 'color': (0, 128, 0)},
-            'forest': {'char': '♣', 'color': (0, 100, 0)},
+            'forest': {'char': 'T', 'color': (0, 100, 0)},
             'mountain': {'char': '^', 'color': (128, 128, 128)},
             'desert': {'char': '.', 'color': (210, 180, 140)},
             'swamp': {'char': ';', 'color': (128, 0, 128)},
