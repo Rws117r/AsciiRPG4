@@ -12,6 +12,7 @@ import factory # Make sure factory is imported
 from core_systems import InputSystem, MovementSystem, ActionSystem
 from combat_systems import SavingThrowSystem, AbilitySystem, CombatSystem
 from status_systems import StatusEffectSystem
+from ai_system import AISystem  # Import the AISystem
 from render_system import RenderSystem
 
 # --- Core ECS Classes ---
@@ -265,7 +266,7 @@ class Game:
         self.world.add_system(ActionSystem(self.world))
         self.world.add_system(AbilitySystem(self.world))  # Add the new AbilitySystem
         self.world.add_system(SavingThrowSystem(self.world))  # Add saving throw system
-        from systems import AISystem # Explicitly import AISystem here
+        self.world.add_system(AISystem(self.world))  # Add the AI system - THIS WAS MISSING!
         self.world.add_system(CombatSystem(self.world))
         self.world.add_system(StatusEffectSystem(self.world))  # Add status effect system
         self.world.add_system(RenderSystem(self.world, self.screen, self.font, self.TILE_SIZE))
