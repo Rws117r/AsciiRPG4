@@ -1,0 +1,186 @@
+{
+  "Fighter": {
+    "name": "Fighter",
+    "requirements": {},
+    "prime_requisite": ["STR"],
+    "hit_dice": "1d8",
+    "max_level": 14,
+    "armor": ["any", "shields"],
+    "weapons": ["any"],
+    "description": "Warriors dedicated to mastering the arts of combat and war.",
+    "abilities": [],
+    "progression": [
+      {"level": 1, "xp": 0, "thac0": 19, "saves": {"death": 12, "wands": 13, "paralysis": 14, "breath": 15, "spells": 16}},
+      {"level": 2, "xp": 2000, "thac0": 19, "saves": {"death": 12, "wands": 13, "paralysis": 14, "breath": 15, "spells": 16}},
+      {"level": 3, "xp": 4000, "thac0": 19, "saves": {"death": 12, "wands": 13, "paralysis": 14, "breath": 15, "spells": 16}},
+      {"level": 4, "xp": 8000, "thac0": 17, "saves": {"death": 10, "wands": 11, "paralysis": 12, "breath": 13, "spells": 14}},
+      {"level": 5, "xp": 16000, "thac0": 17, "saves": {"death": 10, "wands": 11, "paralysis": 12, "breath": 13, "spells": 14}},
+      {"level": 6, "xp": 32000, "thac0": 17, "saves": {"death": 10, "wands": 11, "paralysis": 12, "breath": 13, "spells": 14}},
+      {"level": 7, "xp": 64000, "thac0": 14, "saves": {"death": 8, "wands": 9, "paralysis": 10, "breath": 10, "spells": 12}},
+      {"level": 8, "xp": 120000, "thac0": 14, "saves": {"death": 8, "wands": 9, "paralysis": 10, "breath": 10, "spells": 12}},
+      {"level": 9, "xp": 240000, "thac0": 14, "saves": {"death": 8, "wands": 9, "paralysis": 10, "breath": 10, "spells": 12}}
+    ]
+  },
+  "Cleric": {
+    "name": "Cleric",
+    "requirements": {},
+    "prime_requisite": ["WIS"],
+    "hit_dice": "1d6",
+    "max_level": 14,
+    "armor": ["any", "shields"],
+    "weapons": ["blunt"],
+    "description": "Warriors who have sworn to serve a deity, channeling divine power.",
+    "abilities": ["player_turn_undead"],
+    "spells": {
+      "1": [0, 1, 2, 2, 2, 2, 2, 3, 3],
+      "2": [0, 0, 0, 1, 2, 2, 2, 2, 3],
+      "3": [0, 0, 0, 0, 0, 1, 2, 2, 2],
+      "4": [0, 0, 0, 0, 0, 0, 1, 1, 2],
+      "5": [0, 0, 0, 0, 0, 0, 0, 1, 1]
+    },
+    "progression": [
+      {"level": 1, "xp": 0, "thac0": 19, "saves": {"death": 11, "wands": 12, "paralysis": 14, "breath": 16, "spells": 15}},
+      {"level": 2, "xp": 1500, "thac0": 19, "saves": {"death": 11, "wands": 12, "paralysis": 14, "breath": 16, "spells": 15}},
+      {"level": 3, "xp": 3000, "thac0": 19, "saves": {"death": 11, "wands": 12, "paralysis": 14, "breath": 16, "spells": 15}},
+      {"level": 4, "xp": 6000, "thac0": 19, "saves": {"death": 11, "wands": 12, "paralysis": 14, "breath": 16, "spells": 15}},
+      {"level": 5, "xp": 12000, "thac0": 17, "saves": {"death": 9, "wands": 10, "paralysis": 12, "breath": 14, "spells": 12}},
+      {"level": 6, "xp": 25000, "thac0": 17, "saves": {"death": 9, "wands": 10, "paralysis": 12, "breath": 14, "spells": 12}},
+      {"level": 7, "xp": 50000, "thac0": 17, "saves": {"death": 9, "wands": 10, "paralysis": 12, "breath": 14, "spells": 12}},
+      {"level": 8, "xp": 100000, "thac0": 17, "saves": {"death": 9, "wands": 10, "paralysis": 12, "breath": 14, "spells": 12}},
+      {"level": 9, "xp": 200000, "thac0": 14, "saves": {"death": 6, "wands": 7, "paralysis": 9, "breath": 11, "spells": 9}}
+    ]
+  },
+  "Magic-User": {
+    "name": "Magic-User",
+    "requirements": {},
+    "prime_requisite": ["INT"],
+    "hit_dice": "1d4",
+    "max_level": 14,
+    "armor": ["none"],
+    "weapons": ["dagger"],
+    "description": "Scholars of arcane secrets who cast powerful spells.",
+    "abilities": ["player_magic_missile", "player_sleep", "player_charm"],
+    "spells": {
+      "1": [1, 2, 2, 2, 2, 2, 3, 3, 3],
+      "2": [0, 0, 1, 2, 2, 2, 2, 3, 3],
+      "3": [0, 0, 0, 0, 1, 2, 2, 2, 3],
+      "4": [0, 0, 0, 0, 0, 0, 1, 2, 2],
+      "5": [0, 0, 0, 0, 0, 0, 0, 0, 1]
+    },
+    "progression": [
+      {"level": 1, "xp": 0, "thac0": 19, "saves": {"death": 13, "wands": 14, "paralysis": 13, "breath": 16, "spells": 15}},
+      {"level": 2, "xp": 2500, "thac0": 19, "saves": {"death": 13, "wands": 14, "paralysis": 13, "breath": 16, "spells": 15}},
+      {"level": 3, "xp": 5000, "thac0": 19, "saves": {"death": 13, "wands": 14, "paralysis": 13, "breath": 16, "spells": 15}},
+      {"level": 4, "xp": 10000, "thac0": 19, "saves": {"death": 13, "wands": 14, "paralysis": 13, "breath": 16, "spells": 15}},
+      {"level": 5, "xp": 20000, "thac0": 19, "saves": {"death": 13, "wands": 14, "paralysis": 13, "breath": 16, "spells": 15}},
+      {"level": 6, "xp": 40000, "thac0": 17, "saves": {"death": 11, "wands": 12, "paralysis": 11, "breath": 14, "spells": 12}},
+      {"level": 7, "xp": 80000, "thac0": 17, "saves": {"death": 11, "wands": 12, "paralysis": 11, "breath": 14, "spells": 12}},
+      {"level": 8, "xp": 150000, "thac0": 17, "saves": {"death": 11, "wands": 12, "paralysis": 11, "breath": 14, "spells": 12}},
+      {"level": 9, "xp": 300000, "thac0": 17, "saves": {"death": 11, "wands": 12, "paralysis": 11, "breath": 14, "spells": 12}}
+    ]
+  },
+  "Thief": {
+    "name": "Thief",
+    "requirements": {},
+    "prime_requisite": ["DEX"],
+    "hit_dice": "1d4",
+    "max_level": 14,
+    "armor": ["leather"],
+    "weapons": ["any"],
+    "description": "Masters of stealth, deception, and precision strikes from the shadows.",
+    "abilities": [],
+    "skills": {
+      "climb_walls": [87, 88, 89, 90, 91, 92, 93, 94, 95],
+      "find_traps": [10, 15, 20, 25, 30, 40, 50, 60, 70],
+      "hear_noise": [2, 2, 3, 3, 3, 3, 4, 4, 4],
+      "hide_shadows": [10, 15, 20, 25, 30, 36, 45, 55, 65],
+      "move_silently": [20, 25, 30, 35, 40, 45, 55, 65, 75],
+      "open_locks": [15, 20, 25, 30, 35, 45, 55, 65, 75],
+      "pick_pockets": [20, 25, 30, 35, 40, 45, 55, 65, 75]
+    },
+    "progression": [
+      {"level": 1, "xp": 0, "thac0": 19, "saves": {"death": 13, "wands": 14, "paralysis": 13, "breath": 16, "spells": 15}},
+      {"level": 2, "xp": 1200, "thac0": 19, "saves": {"death": 13, "wands": 14, "paralysis": 13, "breath": 16, "spells": 15}},
+      {"level": 3, "xp": 2400, "thac0": 19, "saves": {"death": 13, "wands": 14, "paralysis": 13, "breath": 16, "spells": 15}},
+      {"level": 4, "xp": 4800, "thac0": 19, "saves": {"death": 13, "wands": 14, "paralysis": 13, "breath": 16, "spells": 15}},
+      {"level": 5, "xp": 9600, "thac0": 17, "saves": {"death": 12, "wands": 13, "paralysis": 11, "breath": 14, "spells": 13}},
+      {"level": 6, "xp": 20000, "thac0": 17, "saves": {"death": 12, "wands": 13, "paralysis": 11, "breath": 14, "spells": 13}},
+      {"level": 7, "xp": 40000, "thac0": 17, "saves": {"death": 12, "wands": 13, "paralysis": 11, "breath": 14, "spells": 13}},
+      {"level": 8, "xp": 80000, "thac0": 17, "saves": {"death": 12, "wands": 13, "paralysis": 11, "breath": 14, "spells": 13}},
+      {"level": 9, "xp": 160000, "thac0": 14, "saves": {"death": 10, "wands": 11, "paralysis": 9, "breath": 12, "spells": 10}}
+    ]
+  },
+  "Halfling": {
+    "name": "Halfling",
+    "requirements": {"DEX": 9, "CON": 9},
+    "prime_requisite": ["DEX", "STR"],
+    "hit_dice": "1d6",
+    "max_level": 8,
+    "armor": ["any", "shields"],
+    "weapons": ["any"],
+    "description": "Small folk known for their luck, courage, and excellent aim with missiles.",
+    "abilities": [],
+    "progression": [
+      {"level": 1, "xp": 0, "thac0": 19, "saves": {"death": 8, "wands": 9, "paralysis": 10, "breath": 13, "spells": 12}},
+      {"level": 2, "xp": 2000, "thac0": 19, "saves": {"death": 8, "wands": 9, "paralysis": 10, "breath": 13, "spells": 12}},
+      {"level": 3, "xp": 4000, "thac0": 19, "saves": {"death": 8, "wands": 9, "paralysis": 10, "breath": 13, "spells": 12}},
+      {"level": 4, "xp": 8000, "thac0": 17, "saves": {"death": 6, "wands": 7, "paralysis": 8, "breath": 10, "spells": 10}},
+      {"level": 5, "xp": 16000, "thac0": 17, "saves": {"death": 6, "wands": 7, "paralysis": 8, "breath": 10, "spells": 10}},
+      {"level": 6, "xp": 32000, "thac0": 17, "saves": {"death": 6, "wands": 7, "paralysis": 8, "breath": 10, "spells": 10}},
+      {"level": 7, "xp": 64000, "thac0": 14, "saves": {"death": 4, "wands": 5, "paralysis": 6, "breath": 7, "spells": 8}},
+      {"level": 8, "xp": 120000, "thac0": 14, "saves": {"death": 4, "wands": 5, "paralysis": 6, "breath": 7, "spells": 8}}
+    ]
+  },
+  "Dwarf": {
+    "name": "Dwarf",
+    "requirements": {"CON": 9},
+    "prime_requisite": ["STR"],
+    "hit_dice": "1d8",
+    "max_level": 12,
+    "armor": ["any", "shields"],
+    "weapons": ["any"],
+    "description": "Stout warriors from mountain halls, resistant to magic and poison.",
+    "abilities": [],
+    "progression": [
+      {"level": 1, "xp": 0, "thac0": 19, "saves": {"death": 8, "wands": 9, "paralysis": 10, "breath": 13, "spells": 12}},
+      {"level": 2, "xp": 2200, "thac0": 19, "saves": {"death": 8, "wands": 9, "paralysis": 10, "breath": 13, "spells": 12}},
+      {"level": 3, "xp": 4400, "thac0": 19, "saves": {"death": 8, "wands": 9, "paralysis": 10, "breath": 13, "spells": 12}},
+      {"level": 4, "xp": 8800, "thac0": 17, "saves": {"death": 6, "wands": 7, "paralysis": 8, "breath": 10, "spells": 10}},
+      {"level": 5, "xp": 17000, "thac0": 17, "saves": {"death": 6, "wands": 7, "paralysis": 8, "breath": 10, "spells": 10}},
+      {"level": 6, "xp": 35000, "thac0": 17, "saves": {"death": 6, "wands": 7, "paralysis": 8, "breath": 10, "spells": 10}},
+      {"level": 7, "xp": 70000, "thac0": 14, "saves": {"death": 4, "wands": 5, "paralysis": 6, "breath": 7, "spells": 8}},
+      {"level": 8, "xp": 140000, "thac0": 14, "saves": {"death": 4, "wands": 5, "paralysis": 6, "breath": 7, "spells": 8}},
+      {"level": 9, "xp": 270000, "thac0": 14, "saves": {"death": 4, "wands": 5, "paralysis": 6, "breath": 7, "spells": 8}}
+    ]
+  },
+  "Elf": {
+    "name": "Elf",
+    "requirements": {"INT": 9},
+    "prime_requisite": ["INT", "STR"],
+    "hit_dice": "1d6",
+    "max_level": 10,
+    "armor": ["any", "shields"],
+    "weapons": ["any"],
+    "description": "Graceful beings who blend martial prowess with arcane magic.",
+    "abilities": ["player_magic_missile", "player_sleep"],
+    "spells": {
+      "1": [1, 2, 2, 2, 2, 3, 3, 3, 3, 3],
+      "2": [0, 0, 1, 2, 2, 2, 3, 3, 3, 3],
+      "3": [0, 0, 0, 0, 1, 2, 2, 3, 3, 3],
+      "4": [0, 0, 0, 0, 0, 0, 1, 2, 2, 3],
+      "5": [0, 0, 0, 0, 0, 0, 0, 0, 1, 2]
+    },
+    "progression": [
+      {"level": 1, "xp": 0, "thac0": 19, "saves": {"death": 12, "wands": 13, "paralysis": 13, "breath": 15, "spells": 15}},
+      {"level": 2, "xp": 4000, "thac0": 19, "saves": {"death": 12, "wands": 13, "paralysis": 13, "breath": 15, "spells": 15}},
+      {"level": 3, "xp": 8000, "thac0": 19, "saves": {"death": 12, "wands": 13, "paralysis": 13, "breath": 15, "spells": 15}},
+      {"level": 4, "xp": 16000, "thac0": 17, "saves": {"death": 10, "wands": 11, "paralysis": 11, "breath": 13, "spells": 12}},
+      {"level": 5, "xp": 32000, "thac0": 17, "saves": {"death": 10, "wands": 11, "paralysis": 11, "breath": 13, "spells": 12}},
+      {"level": 6, "xp": 64000, "thac0": 17, "saves": {"death": 10, "wands": 11, "paralysis": 11, "breath": 13, "spells": 12}},
+      {"level": 7, "xp": 120000, "thac0": 14, "saves": {"death": 8, "wands": 9, "paralysis": 9, "breath": 10, "spells": 10}},
+      {"level": 8, "xp": 250000, "thac0": 14, "saves": {"death": 8, "wands": 9, "paralysis": 9, "breath": 10, "spells": 10}},
+      {"level": 9, "xp": 400000, "thac0": 14, "saves": {"death": 8, "wands": 9, "paralysis": 9, "breath": 10, "spells": 10}},
+      {"level": 10, "xp": 600000, "thac0": 12, "saves": {"death": 6, "wands": 7, "paralysis": 8, "breath": 8, "spells": 8}}
+    ]
+  }
+}
