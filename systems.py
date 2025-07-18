@@ -1,6 +1,3 @@
-# systems.py
-# Defines all the logic systems for the ECS.
-
 import pygame
 import random
 import re
@@ -37,16 +34,25 @@ class InputSystem(System):
 
         for event in events:
             if event.type == pygame.KEYDOWN:
+                # Handle global toggles first
                 if event.key == pygame.K_l:
                     game_state.toggle_look_mode()
                     return
                 elif event.key == pygame.K_i:
                     game_state.toggle_inventory()
                     return
+                elif event.key == pygame.K_b:  # 'b' for abilities
+                    game_state.toggle_abilities()
+                    return
+
+                # Handle targeting mode input
+                if hasattr(game_state, 'targeting_mode') and game_state.targeting_mode:
+                    self.handle_targeting_input(event, game_state)
+                    return
 
                 if game_state.look_mode:
                     self.handle_look_input(event, game_state)
-                elif not game_state.show_inventory:  # Don't process movement when inventory is open
+                elif not game_state.show_inventory and not game_state.show_abilities:
                     if event.key in [pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT]:
                         # Check for confusion
                         if state and state.confused:
@@ -61,8 +67,97 @@ class InputSystem(System):
                         self.handle_player_movement(event, player_id, game_state)
                     elif event.key == pygame.K_g:
                         self.handle_pickup(player_id, game_state)
-                    elif event.key == pygame.K_a:
-                        self.handle_attack(player_id, game_state)
+                elif game_state.show_abilities:
+                    self.handle_abilities_input(event, game_state, player_id)
+
+    def handle_abilities_input(self, event, game_state, player_id):
+        """Handle input in the abilities screen."""
+        if event.key >= pygame.K_1 and event.key <= pygame.K_9:
+            # Get ability number (1-9)
+            ability_num = event.key - pygame.K_1
+            
+            # Get player's abilities
+            abilities_comp = self.world.get_component(player_id, AbilitiesComponent)
+            if abilities_comp and ability_num < len(abilities_comp.abilities):
+                ability_id = abilities_comp.abilities[ability_num]
+                
+                if ability_id in self.world.abilities:
+                    ability_data = self.world.abilities[ability_id]
+                    
+                    # Check if this is a player-activated ability
+                    if ability_data.get("type") == "on_special":
+                        self.activate_ability(player_id, ability_id, ability_data, game_state)
+
+    def activate_ability(self, player_id, ability_id, ability_data, game_state):
+        """Activate a player ability, handling targeting if needed."""
+        effect_type = ability_data.get("effect")
+        
+        if effect_type == "apply_status_aoe":
+            # AOE abilities don't need targeting, apply immediately
+            self.world.add_component(player_id, WantsToTriggerAbilityComponent(
+                ability_id=ability_id,
+                target_id=player_id,
+                trigger_type="on_special"
+            ))
+            game_state.player_acted = True
+            game_state.show_abilities = False
+            game_state.add_message(f"You use {ability_id.replace('_', ' ').title()}!")
+            
+        elif effect_type == "apply_status":
+            # Single target abilities need targeting
+            targeting_range = ability_data.get("range", 1)  # Default range of 1
+            game_state.enter_targeting_mode(ability_id, ability_data, targeting_range)
+        
+        else:
+            # Self-target or immediate effect
+            self.world.add_component(player_id, WantsToTriggerAbilityComponent(
+                ability_id=ability_id,
+                target_id=player_id,
+                trigger_type="on_special"
+            ))
+            game_state.player_acted = True
+            game_state.show_abilities = False
+            game_state.add_message(f"You use {ability_id.replace('_', ' ').title()}!")
+
+    def handle_targeting_input(self, event, game_state):
+        """Handle input during targeting mode."""
+        cursor_id = game_state.cursor_id
+        if not cursor_id: return
+
+        if event.key in [pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT]:
+            # Move cursor
+            dx, dy = 0, 0
+            if event.key == pygame.K_UP: dy = -1
+            elif event.key == pygame.K_DOWN: dy = 1
+            elif event.key == pygame.K_LEFT: dx = -1
+            elif event.key == pygame.K_RIGHT: dx = 1
+            
+            self.world.add_component(cursor_id, WantsToMoveComponent(dx, dy))
+            
+        elif event.key == pygame.K_RETURN or event.key == pygame.K_SPACE:
+            # Confirm target
+            cursor_pos = self.world.get_component(cursor_id, PositionComponent)
+            target_id = self.world.get_entity_at_position(cursor_pos.x, cursor_pos.y)
+            
+            # Get player
+            player_entities = self.world.get_entities_with_components(PlayerControllableComponent)
+            if player_entities:
+                player_id = player_entities[0]
+                
+                # Create ability trigger with target
+                self.world.add_component(player_id, WantsToTriggerAbilityComponent(
+                    ability_id=game_state.targeting_ability_id,
+                    target_id=target_id if target_id else None,
+                    trigger_type="on_special"
+                ))
+                
+                game_state.exit_targeting_mode()
+                game_state.player_acted = True
+                game_state.add_message(f"You use {game_state.targeting_ability_id.replace('_', ' ').title()}!")
+                
+        elif event.key == pygame.K_ESCAPE:
+            # Cancel targeting
+            game_state.exit_targeting_mode()
 
     def handle_player_movement(self, event, player_id, game_state):
         dx, dy = 0, 0
@@ -95,36 +190,6 @@ class InputSystem(System):
             self.world.add_component(player_id, WantsToPickupItemComponent(item_id))
             game_state.player_acted = True  # Pickup ends turn
 
-    def handle_attack(self, player_id, game_state):
-        player_pos = self.world.get_component(player_id, PositionComponent)
-        
-        # Check adjacent tiles for a monster
-        adjacent_tiles = [
-            (player_pos.x + 1, player_pos.y),
-            (player_pos.x - 1, player_pos.y),
-            (player_pos.x, player_pos.y + 1),
-            (player_pos.x, player_pos.y - 1),
-        ]
-        
-        for x, y in adjacent_tiles:
-            target_id = self.world.get_entity_at_position(x, y)
-            if target_id:
-                target_faction = self.world.get_component(target_id, FactionComponent)
-                target_state = self.world.get_component(target_id, StateComponent)
-                
-                # Don't attack dead entities
-                if target_state and target_state.dead:
-                    continue
-                    
-                if target_faction and target_faction.name == "monsters":
-                    # Found a monster, create an attack intent
-                    self.world.add_component(player_id, WantsToAttackComponent(target_id))
-                    game_state.player_acted = True  # Attack ends turn
-                    return  # Attack only one monster at a time
-        
-        # If no monster found, add a message
-        game_state.add_message("There's nothing to attack here.")
-
 class MovementSystem(System):
     """Processes movement requests, handling collisions and interactions."""
     def update(self, *args, **kwargs):
@@ -141,23 +206,68 @@ class MovementSystem(System):
             # If the moving entity is the cursor, it's not bound by collisions
             # and can move freely around the map.
             if self.world.get_component(entity_id, CursorComponent):
-                pos.x = target_x
-                pos.y = target_y
+                # In targeting mode, constrain cursor movement by range
+                if hasattr(game_state, 'targeting_mode') and game_state.targeting_mode:
+                    player_entities = self.world.get_entities_with_components(PlayerControllableComponent)
+                    if player_entities:
+                        player_pos = self.world.get_component(player_entities[0], PositionComponent)
+                        distance = max(abs(target_x - player_pos.x), abs(target_y - player_pos.y))
+                        if distance <= game_state.targeting_range:
+                            pos.x = target_x
+                            pos.y = target_y
+                else:
+                    pos.x = target_x
+                    pos.y = target_y
                 self.world.remove_component(entity_id, WantsToMoveComponent)
-                continue # Skip to the next moving entity
+                continue
 
             target_id = self.world.get_entity_at_position(target_x, target_y)
 
-            if target_id and self.world.get_component(target_id, BlocksMovementComponent):
+            # Check if this is a player trying to move into a monster (bump-to-attack)
+            if (self.world.get_component(entity_id, PlayerControllableComponent) and 
+                target_id):
+                
+                target_faction = self.world.get_component(target_id, FactionComponent)
+                target_state = self.world.get_component(target_id, StateComponent)
+                
+                # Don't attack dead entities
+                if target_state and target_state.dead:
+                    pass  # Continue with normal movement logic
+                elif target_faction and target_faction.name == "monsters":
+                    # Create attack intent instead of trying to open
+                    self.world.add_component(entity_id, WantsToAttackComponent(target_id))
+                    self.world.remove_component(entity_id, WantsToMoveComponent)
+                    continue
+                elif self.world.get_component(target_id, BlocksMovementComponent):
+                    # If it's not a monster but blocks movement, try to open it
+                    self.world.add_component(entity_id, WantsToOpenComponent(target_id))
+                    self.world.remove_component(entity_id, WantsToMoveComponent)
+                    continue
+            elif target_id and self.world.get_component(target_id, BlocksMovementComponent):
                 # If it's the player bumping into something, create an "open" intent
                 if self.world.get_component(entity_id, PlayerControllableComponent):
                     self.world.add_component(entity_id, WantsToOpenComponent(target_id))
             else:
                 # Move the entity
-                pos.x = target_x
-                pos.y = target_y
-
+                
+                # Check if the moving entity is a monster, and if the target is the player
+                moving_faction = self.world.get_component(entity_id, FactionComponent)
+                target_faction = self.world.get_component(target_id, FactionComponent) if target_id else None
+                
+                if (moving_faction and moving_faction.name == "monsters" and
+                    target_faction and target_faction.name == "player"):
+                    # Monster can't move through the player, so skip this move.
+                    pass
+                else:
+                    # Either the player is moving (and can move through monsters), or it's a 
+                    # monster moving to an empty space or another monster (which is allowed now).
+                    pos.x = target_x
+                    pos.y = target_y
+            
+            # In either case (move or blocked), we remove the movement intent
+            # because the movement has been handled in this turn.
             self.world.remove_component(entity_id, WantsToMoveComponent)
+
 
 class ActionSystem(System):
     """Processes complex actions like picking up items and unlocking things."""
@@ -305,10 +415,121 @@ class SavingThrowSystem(System):
             self.world.remove_component(entity_id, WantsToMakeSavingThrowComponent)
 
 class CombatSystem(System):
-    """Handles combat between entities."""
+    """Handles combat between entities and ability processing."""
+    
     def update(self, *args, **kwargs):
         game_state = kwargs.get('game_state')
+        
+        # Process ability triggers first
+        self.process_ability_triggers(game_state)
+        
+        # Then process regular attacks
+        self.process_attacks(game_state)
 
+    def process_ability_triggers(self, game_state):
+        """Process WantsToTriggerAbilityComponent intents."""
+        for entity_id in self.world.get_entities_with_components(WantsToTriggerAbilityComponent):
+            trigger_intent = self.world.get_component(entity_id, WantsToTriggerAbilityComponent)
+            ability_id = trigger_intent.ability_id
+            target_id = trigger_intent.target_id
+            
+            if ability_id not in self.world.abilities:
+                print(f"Warning: Ability '{ability_id}' not found")
+                self.world.remove_component(entity_id, WantsToTriggerAbilityComponent)
+                continue
+            
+            ability_data = self.world.abilities[ability_id]
+            effect_type = ability_data.get("effect")
+            chance = ability_data.get("chance", 1.0)
+            
+            # Roll for ability success
+            if random.random() <= chance:
+                if effect_type == "apply_status":
+                    # Single target status effect
+                    if target_id:
+                        status_effect = ability_data.get("status_effect")
+                        if status_effect:
+                            save_type = self.get_save_type_for_effect(status_effect.get("id"))
+                            if save_type:
+                                # Create saving throw intent
+                                self.world.add_component(target_id, WantsToMakeSavingThrowComponent(
+                                    save_type=save_type,
+                                    dc=15,
+                                    effect_data=status_effect,
+                                    source_entity_id=entity_id
+                                ))
+                            else:
+                                # No save allowed, apply directly
+                                self.world.add_component(target_id, WantsToApplyStatusComponent(
+                                    status_effect_data=status_effect,
+                                    source_entity_id=entity_id
+                                ))
+                    else:
+                        game_state.add_message("No valid target for ability!")
+                        
+                elif effect_type == "apply_status_aoe":
+                    # Area of effect status application
+                    self.apply_aoe_status_effect(entity_id, ability_data, game_state)
+                    
+                else:
+                    game_state.add_message(f"Unknown ability effect type: {effect_type}")
+            else:
+                # Ability failed its chance roll
+                user_name = "You" if self.world.get_component(entity_id, PlayerControllableComponent) else "The creature"
+                game_state.add_message(f"{user_name} {'try' if user_name == 'You' else 'tries'} to use {ability_id.replace('_', ' ')} but {'fail' if user_name == 'You' else 'fails'}!")
+            
+            self.world.remove_component(entity_id, WantsToTriggerAbilityComponent)
+
+    def apply_aoe_status_effect(self, caster_id, ability_data, game_state):
+        """Apply area of effect status effects around the caster."""
+        caster_pos = self.world.get_component(caster_id, PositionComponent)
+        if not caster_pos:
+            return
+        
+        status_effect = ability_data.get("status_effect")
+        if not status_effect:
+            return
+        
+        # Get AOE range (default to 1 tile radius)
+        aoe_range = ability_data.get("range", 1)
+        
+        # Find all entities within range
+        affected_entities = []
+        for entity_id in self.world.get_entities_with_components(PositionComponent):
+            if entity_id == caster_id:
+                continue  # Don't affect self unless specified
+                
+            entity_pos = self.world.get_component(entity_id, PositionComponent)
+            distance = max(abs(entity_pos.x - caster_pos.x), abs(entity_pos.y - caster_pos.y))
+            
+            if distance <= aoe_range:
+                # Check if this entity can be affected (has combat component)
+                if self.world.get_component(entity_id, CombatComponent):
+                    affected_entities.append(entity_id)
+        
+        # Apply status effect to all affected entities
+        for target_id in affected_entities:
+            save_type = self.get_save_type_for_effect(status_effect.get("id"))
+            if save_type:
+                self.world.add_component(target_id, WantsToMakeSavingThrowComponent(
+                    save_type=save_type,
+                    dc=15,
+                    effect_data=status_effect,
+                    source_entity_id=caster_id
+                ))
+            else:
+                self.world.add_component(target_id, WantsToApplyStatusComponent(
+                    status_effect_data=status_effect,
+                    source_entity_id=caster_id
+                ))
+        
+        # Message about AOE effect
+        caster_name = "You" if self.world.get_component(caster_id, PlayerControllableComponent) else "The creature"
+        ability_name = ability_data.get("name", "ability")
+        game_state.add_message(f"{caster_name} {'use' if caster_name == 'You' else 'uses'} {ability_name}, affecting {len(affected_entities)} targets!")
+
+    def process_attacks(self, game_state):
+        """Process regular attack intents."""
         for attacker_id in self.world.get_entities_with_components(WantsToAttackComponent):
             intent = self.world.get_component(attacker_id, WantsToAttackComponent)
             target_id = intent.target_id
@@ -413,8 +634,10 @@ class CombatSystem(System):
             "energy_drain_2": "death",
             "poison_lethal": "death",
             "poison_sickness": "death",
-            # Some effects don't allow saves
-            "ability_drain_strength": None,
+            "deafness": "spells",
+            "slowness": "spells",
+            "unconsciousness": "spells",
+            "ability_drain_strength": None, # No save
             "ability_drain_wisdom": None,
             "ability_drain_charisma": None,
         }
@@ -455,7 +678,6 @@ class CombatSystem(System):
         entity_name = "You" if self.world.get_component(dead_entity_id, PlayerControllableComponent) else f"The {defender_desc.text}"
         if self.world.get_component(dead_entity_id, PlayerControllableComponent):
             game_state.add_message("You have died! Game Over.")
-            # TODO: Handle player death (restart, etc.)
         else:
             game_state.add_message(f"{entity_name} dies!")
         
@@ -689,26 +911,35 @@ class RenderSystem(System):
         self.font = font
         self.tile_size = tile_size
         self.inventory_width = 300
+        self.abilities_width = 400
         self.inventory_slide_amount = 0
-        self.inventory_slide_speed = 20
+        self.abilities_slide_amount = 0
+        self.slide_speed = 20
 
     def update(self, *args, **kwargs):
         game_state = kwargs.get('game_state')
         self.screen.fill((0, 0, 0))
 
-        # Update inventory slide animation
+        # Update slide animations
         if game_state and game_state.show_inventory:
             if self.inventory_slide_amount < self.inventory_width:
-                self.inventory_slide_amount = min(self.inventory_slide_amount + self.inventory_slide_speed, self.inventory_width)
+                self.inventory_slide_amount = min(self.inventory_slide_amount + self.slide_speed, self.inventory_width)
         else:
             if self.inventory_slide_amount > 0:
-                self.inventory_slide_amount = max(self.inventory_slide_amount - self.inventory_slide_speed, 0)
+                self.inventory_slide_amount = max(self.inventory_slide_amount - self.slide_speed, 0)
+
+        if game_state and game_state.show_abilities:
+            if self.abilities_slide_amount < self.abilities_width:
+                self.abilities_slide_amount = min(self.abilities_slide_amount + self.slide_speed, self.abilities_width)
+        else:
+            if self.abilities_slide_amount > 0:
+                self.abilities_slide_amount = max(self.abilities_slide_amount - self.slide_speed, 0)
 
         # Draw entities
         entities_to_render = self.world.get_entities_with_components(PositionComponent, RenderableComponent)
         for entity_id in entities_to_render:
             pos = self.world.get_component(entity_id, PositionComponent)
-            if pos.x < 0 or pos.y < 0: continue # Don't draw off-screen entities
+            if pos.x < 0 or pos.y < 0: continue
 
             if self.world.get_component(entity_id, CursorComponent): continue
 
@@ -719,17 +950,21 @@ class RenderSystem(System):
             state = self.world.get_component(entity_id, StateComponent)
             if state:
                 if state.dead:
-                    # Dead entities are already handled by death system (gray corpse)
                     color = renderable.color
                 elif state.paralyzed or state.petrified:
-                    color = (128, 128, 128)  # Gray for paralyzed/petrified
+                    color = (128, 128, 128)
                 elif state.confused:
-                    color = (255, 0, 255)    # Magenta for confused
+                    color = (255, 0, 255)
                 elif state.lethally_poisoned or state.sickened:
-                    color = (0, 255, 0)      # Green for poisoned
+                    color = (0, 255, 0)
             
             text_surface = self.font.render(renderable.char, True, color)
             self.screen.blit(text_surface, (pos.x * self.tile_size, pos.y * self.tile_size))
+
+        # Draw targeting cursor if in targeting mode
+        if (game_state and hasattr(game_state, 'targeting_mode') and 
+            game_state.targeting_mode):
+            self.draw_targeting_cursor(game_state)
 
         # Draw look cursor and message
         if game_state and game_state.look_mode:
@@ -739,13 +974,200 @@ class RenderSystem(System):
         if game_state:
             self.draw_messages(game_state)
 
-        # Draw inventory sidebar
+        # Draw sidebars
         if game_state and self.inventory_slide_amount > 0:
             self.draw_inventory(game_state)
+        
+        if game_state and self.abilities_slide_amount > 0:
+            self.draw_abilities_screen(game_state)
         
         # Draw status information
         if game_state:
             self.draw_status_info(game_state)
+
+    def draw_targeting_cursor(self, game_state):
+        """Draw the targeting cursor with range indication."""
+        cursor_id = game_state.cursor_id
+        if not cursor_id: return
+        
+        cursor_pos = self.world.get_component(cursor_id, PositionComponent)
+        player_entities = self.world.get_entities_with_components(PlayerControllableComponent)
+        
+        if not player_entities: return
+        player_pos = self.world.get_component(player_entities[0], PositionComponent)
+        
+        # Draw range indicator
+        for x in range(max(0, player_pos.x - game_state.targeting_range), 
+                      player_pos.x + game_state.targeting_range + 1):
+            for y in range(max(0, player_pos.y - game_state.targeting_range), 
+                          player_pos.y + game_state.targeting_range + 1):
+                distance = max(abs(x - player_pos.x), abs(y - player_pos.y))
+                if distance <= game_state.targeting_range:
+                    bg_rect = pygame.Rect(x * self.tile_size, y * self.tile_size, 
+                                        self.tile_size, self.tile_size)
+                    if distance == game_state.targeting_range:
+                        pygame.draw.rect(self.screen, (40, 40, 0), bg_rect)  # Range edge
+                    else:
+                        pygame.draw.rect(self.screen, (20, 20, 0), bg_rect)  # Within range
+        
+        # Draw targeting cursor
+        if (pygame.time.get_ticks() // 200) % 2 == 0:  # Faster flash
+            cursor_rect = pygame.Rect(cursor_pos.x * self.tile_size, cursor_pos.y * self.tile_size, 
+                                    self.tile_size, self.tile_size)
+            pygame.draw.rect(self.screen, (255, 255, 0), cursor_rect, 3)
+        
+        # Draw targeting instructions
+        instructions = [
+            f"Targeting: {game_state.targeting_ability_id.replace('_', ' ').title()}",
+            "Use arrow keys to move cursor",
+            "ENTER/SPACE to confirm, ESC to cancel"
+        ]
+        y_offset = self.screen.get_height() - 80
+        for instruction in instructions:
+            inst_surface = self.font.render(instruction, True, (255, 255, 0))
+            inst_rect = inst_surface.get_rect(centerx=self.screen.get_width() // 2, y=y_offset)
+            self.screen.blit(inst_surface, inst_rect)
+            y_offset += 20
+
+    def draw_abilities_screen(self, game_state):
+        """Draw the abilities screen showing player's available abilities."""
+        # Get player entity
+        player_entities = self.world.get_entities_with_components(PlayerControllableComponent)
+        if not player_entities: return
+        player_id = player_entities[0]
+        
+        abilities_comp = self.world.get_component(player_id, AbilitiesComponent)
+        
+        # Position on right side of screen
+        abilities_x = self.screen.get_width() - self.abilities_slide_amount
+        abilities_rect = pygame.Rect(abilities_x, 0, self.abilities_width, self.screen.get_height())
+        
+        # Draw background
+        bg_surface = pygame.Surface((self.abilities_width, self.screen.get_height()))
+        bg_surface.set_alpha(240)
+        bg_surface.fill((30, 30, 60))
+        self.screen.blit(bg_surface, (abilities_x, 0))
+        
+        # Draw border
+        pygame.draw.rect(self.screen, (100, 100, 150), abilities_rect, 2)
+        
+        # Draw title
+        title_surface = self.font.render("ABILITIES", True, (255, 255, 255))
+        title_rect = title_surface.get_rect(centerx=abilities_x + self.abilities_width // 2, y=20)
+        self.screen.blit(title_surface, title_rect)
+        
+        # Draw separator line
+        pygame.draw.line(self.screen, (100, 100, 150), 
+                        (abilities_x + 10, 50), 
+                        (abilities_x + self.abilities_width - 10, 50), 2)
+        
+        # Draw abilities list
+        y_offset = 70
+        if not abilities_comp or not abilities_comp.abilities:
+            empty_surface = self.font.render("(no abilities)", True, (150, 150, 150))
+            empty_rect = empty_surface.get_rect(centerx=abilities_x + self.abilities_width // 2, y=y_offset)
+            self.screen.blit(empty_surface, empty_rect)
+        else:
+            for i, ability_id in enumerate(abilities_comp.abilities):
+                if ability_id in self.world.abilities:
+                    ability_data = self.world.abilities[ability_id]
+                    
+                    # Number key
+                    num_surface = self.font.render(f"{i+1}.", True, (255, 255, 100))
+                    self.screen.blit(num_surface, (abilities_x + 20, y_offset))
+                    
+                    # Ability name
+                    name = ability_data.get("name", ability_id.replace('_', ' ').title())
+                    name_surface = self.font.render(name, True, (255, 255, 255))
+                    self.screen.blit(name_surface, (abilities_x + 50, y_offset))
+                    
+                    y_offset += 25
+                    
+                    # Ability description
+                    description = self.format_ability_description(ability_data)
+                    desc_lines = self.wrap_text(description, self.abilities_width - 60)
+                    
+                    for line in desc_lines:
+                        desc_surface = self.font.render(line, True, (200, 200, 200))
+                        self.screen.blit(desc_surface, (abilities_x + 60, y_offset))
+                        y_offset += 20
+                    
+                    y_offset += 10  # Extra space between abilities
+        
+        # Draw instructions at bottom
+        instructions = [
+            "Press number key to use ability",
+            "Press 'B' to close"
+        ]
+        y_offset = self.screen.get_height() - 60
+        for instruction in instructions:
+            inst_surface = self.font.render(instruction, True, (200, 200, 200))
+            inst_rect = inst_surface.get_rect(centerx=abilities_x + self.abilities_width // 2, y=y_offset)
+            self.screen.blit(inst_surface, inst_rect)
+            y_offset += 25
+
+    def format_ability_description(self, ability_data):
+        """Format an ability's data into a readable description."""
+        # Use provided description if available
+        if "description" in ability_data:
+            return ability_data["description"]
+        
+        # Otherwise, generate description from data
+        effect_type = ability_data.get("effect", "unknown")
+        chance = ability_data.get("chance", 1.0)
+        status_effect = ability_data.get("status_effect", {})
+        
+        description_parts = []
+        
+        # Add chance if not 100%
+        if chance < 1.0:
+            description_parts.append(f"{int(chance * 100)}% chance to")
+        
+        # Describe the effect
+        if effect_type == "apply_status":
+            effect_name = status_effect.get("id", "unknown effect")
+            effect_name = effect_name.replace('_', ' ')
+            description_parts.append(f"apply {effect_name}")
+            
+            # Add duration if temporary
+            if status_effect.get("type") == "temporary":
+                duration = status_effect.get("duration", "1")
+                description_parts.append(f"for {duration} turns")
+        
+        elif effect_type == "apply_status_aoe":
+            effect_name = status_effect.get("id", "unknown effect")
+            effect_name = effect_name.replace('_', ' ')
+            description_parts.append(f"apply {effect_name} to area")
+            
+            if status_effect.get("type") == "temporary":
+                duration = status_effect.get("duration", "1")
+                description_parts.append(f"for {duration} turns")
+        
+        return " ".join(description_parts)
+
+    def wrap_text(self, text, max_width):
+        """Wrap text to fit within a given pixel width."""
+        words = text.split(' ')
+        lines = []
+        current_line = []
+        
+        for word in words:
+            test_line = ' '.join(current_line + [word])
+            test_surface = self.font.render(test_line, True, (255, 255, 255))
+            
+            if test_surface.get_width() <= max_width:
+                current_line.append(word)
+            else:
+                if current_line:
+                    lines.append(' '.join(current_line))
+                    current_line = [word]
+                else:
+                    lines.append(word)  # Word is too long, add it anyway
+        
+        if current_line:
+            lines.append(' '.join(current_line))
+        
+        return lines
 
     def draw_cursor_and_description(self, game_state):
         cursor_id = game_state.cursor_id
@@ -991,4 +1413,5 @@ class AISystem(System):
                         self.world.add_component(entity_id, WantsToMoveComponent(dx, dy))
             else:
                 # Player not in sight - do nothing or wander randomly
-                pass
+                pass# systems.py
+# Defines all the logic systems for the ECS.

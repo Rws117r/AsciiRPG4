@@ -229,3 +229,11 @@ class ExperienceComponent(Component):
         """
         if for_level <= 1: return 0
         return 2000 * (2 ** (for_level - 2))
+
+# Phase 1 Addition: New component for ability usage
+class WantsToUseAbilityComponent(Component):
+    """Intent to use an ability with optional targeting."""
+    def __init__(self, ability_id, target_id=None, target_position=None):
+        self.ability_id = ability_id
+        self.target_id = target_id
+        self.target_position = target_position  # For ground-targeted abilities

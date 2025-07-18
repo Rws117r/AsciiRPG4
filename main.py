@@ -109,11 +109,20 @@ class Game:
         self.fullscreen = False
         self.look_mode = False
         self.show_inventory = False
+        self.show_abilities = False  # Phase 1 Addition
         self.cursor_id = None
         self.message_log = []
+        
         # Turn-based system attributes
         self.game_state = 'PLAYER_TURN'  # Can be 'PLAYER_TURN', 'MONSTER_TURN', or 'GAME_OVER'
         self.player_acted = False  # Track if player has acted this turn
+        
+        # Phase 1 Addition: Targeting system attributes
+        self.targeting_mode = False
+        self.targeting_ability_id = None
+        self.targeting_ability_data = None
+        self.targeting_range = 1
+        
         self.screen = pygame.display.set_mode((self.WINDOW_WIDTH, self.WINDOW_HEIGHT), pygame.RESIZABLE)
         pygame.display.set_caption("ASCII Roguelike")
         self.clock = pygame.time.Clock()
@@ -226,7 +235,12 @@ class Game:
         self.world.status_effects = self.load_json_file('status_effects.json') or {}
         
         # Load hand-crafted entity instances from their own files
-        creatures_data = self.load_json_file('creatures.json') or {"entities": []}
+        all_creatures_data = self.load_json_file('creatures.json') or {"entities": []}
+        
+        # Filter creatures to keep only the player and one goblin
+        creatures_data = {"entities": [
+            entity for entity in all_creatures_data["entities"] if entity.get("name") == "Player" or entity.get("name") == "Goblin"
+        ][:2]}  # Keep only the first two (player + goblin)
         items_data = self.load_json_file('items.json') or {"entities": []}
 
         if creatures_data: self.create_entities_from_definitions(creatures_data["entities"])
@@ -255,8 +269,8 @@ class Game:
         self.create_cursor()
         
         # Welcome message
-        self.add_message("Welcome to the dungeon! Use arrow keys to move, 'g' to get items, 'a' to attack.")
-        self.add_message("Press 'l' for look mode, 'i' for inventory. Good luck!")
+        self.add_message("Welcome to the dungeon! Use arrow keys to move, 'g' to get items.")
+        self.add_message("Press 'l' for look mode, 'i' for inventory, 'b' for abilities. Good luck!")
 
     def create_cursor(self):
         """Creates the look cursor entity."""
@@ -270,6 +284,7 @@ class Game:
         self.look_mode = not self.look_mode
         if self.look_mode:
             self.show_inventory = False  # Close inventory when entering look mode
+            self.show_abilities = False  # Close abilities when entering look mode
             player_entities = self.world.get_entities_with_components(components.PlayerControllableComponent)
             if player_entities:
                 player_id = player_entities[0]
@@ -282,7 +297,47 @@ class Game:
         self.show_inventory = not self.show_inventory
         if self.show_inventory:
             self.look_mode = False  # Close look mode when opening inventory
+            self.show_abilities = False  # Close abilities when opening inventory
         print(f"Inventory: {'OPEN' if self.show_inventory else 'CLOSED'}")
+
+    # Phase 1 Addition: Abilities screen toggle
+    def toggle_abilities(self):
+        """Toggle the abilities screen."""
+        self.show_abilities = not self.show_abilities
+        if self.show_abilities:
+            self.look_mode = False
+            self.show_inventory = False
+        print(f"Abilities screen: {'OPEN' if self.show_abilities else 'CLOSED'}")
+
+    # Phase 1 Addition: Targeting mode methods
+    def enter_targeting_mode(self, ability_id, ability_data, targeting_range):
+        """Enter targeting mode for an ability."""
+        self.targeting_mode = True
+        self.targeting_ability_id = ability_id
+        self.targeting_ability_data = ability_data
+        self.targeting_range = targeting_range
+        
+        # Close other UI screens
+        self.show_abilities = False
+        self.show_inventory = False
+        self.look_mode = False
+        
+        # Position cursor on player
+        player_entities = self.world.get_entities_with_components(components.PlayerControllableComponent)
+        if player_entities:
+            player_pos = self.world.get_component(player_entities[0], components.PositionComponent)
+            cursor_pos = self.world.get_component(self.cursor_id, components.PositionComponent)
+            cursor_pos.x, cursor_pos.y = player_pos.x, player_pos.y
+        
+        self.add_message(f"Targeting {ability_id.replace('_', ' ').title()}. Range: {targeting_range}")
+
+    def exit_targeting_mode(self):
+        """Exit targeting mode."""
+        self.targeting_mode = False
+        self.targeting_ability_id = None
+        self.targeting_ability_data = None
+        self.targeting_range = 1
+        self.add_message("Targeting cancelled.")
 
     def check_player_death(self):
         """Check if the player has died and handle game over."""
@@ -316,10 +371,14 @@ class Game:
                             if isinstance(system, RenderSystem): 
                                 system.screen = self.screen
                     elif event.key == pygame.K_ESCAPE:
-                        if self.look_mode: 
+                        if self.targeting_mode:  # Phase 1 Addition: Exit targeting mode
+                            self.exit_targeting_mode()
+                        elif self.look_mode: 
                             self.toggle_look_mode()
                         elif self.show_inventory: 
                             self.toggle_inventory()
+                        elif self.show_abilities:  # Phase 1 Addition: Close abilities screen
+                            self.toggle_abilities()
                         else: 
                             running = False
             

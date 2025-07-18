@@ -197,5 +197,97 @@
       "duration": "1d6",
       "on_apply_message": "is weakened by the hag's horrible gaze!"
     }
+  },
+  
+  "_comment": "Player Abilities - New Phase 1 Additions",
+  
+  "player_heal": {
+    "name": "Healing Touch",
+    "type": "on_special",
+    "effect": "heal",
+    "range": 1,
+    "chance": 1.0,
+    "healing": "1d8+1",
+    "description": "Heals yourself or an adjacent ally for 1d8+1 hit points."
+  },
+  "player_magic_missile": {
+    "name": "Magic Missile",
+    "type": "on_special",
+    "effect": "damage",
+    "range": 6,
+    "chance": 1.0,
+    "damage": "1d4+1",
+    "description": "Fires an unerring bolt of magical force for 1d4+1 damage."
+  },
+  "player_charm": {
+    "name": "Charm Person",
+    "type": "on_special",
+    "effect": "apply_status",
+    "range": 3,
+    "chance": 1.0,
+    "status_effect": {
+      "id": "charm",
+      "type": "temporary",
+      "duration": "2d6",
+      "on_apply_message": "is charmed!"
+    },
+    "description": "Attempts to charm a humanoid creature within range."
+  },
+  "player_fireball": {
+    "name": "Fireball",
+    "type": "on_special",
+    "effect": "damage_aoe",
+    "range": 8,
+    "aoe_radius": 2,
+    "chance": 1.0,
+    "damage": "6d6",
+    "description": "Explodes in a large area, dealing 6d6 fire damage."
+  },
+  "player_sleep": {
+    "name": "Sleep",
+    "type": "on_special",
+    "effect": "apply_status_aoe",
+    "range": 4,
+    "aoe_radius": 1,
+    "chance": 1.0,
+    "status_effect": {
+      "id": "unconsciousness",
+      "type": "temporary",
+      "duration": "2d4",
+      "on_apply_message": "falls asleep!"
+    },
+    "description": "Puts creatures in a small area to sleep for 2d4 rounds."
+  },
+  "player_lightning_bolt": {
+    "name": "Lightning Bolt",
+    "type": "on_special",
+    "effect": "damage_line",
+    "range": 10,
+    "chance": 1.0,
+    "damage": "3d6",
+    "description": "Fires a bolt of lightning in a straight line for 3d6 damage."
+  },
+  "player_cure_poison": {
+    "name": "Neutralize Poison",
+    "type": "on_special",
+    "effect": "cure_status",
+    "range": 1,
+    "chance": 1.0,
+    "cures": ["poison_lethal", "poison_sickness"],
+    "description": "Removes poison effects from yourself or an adjacent ally."
+  },
+  "player_turn_undead": {
+    "name": "Turn Undead",
+    "type": "on_special",
+    "effect": "apply_status_aoe",
+    "range": 3,
+    "chance": 0.7,
+    "status_effect": {
+      "id": "fascination",
+      "type": "temporary",
+      "duration": "2d6",
+      "on_apply_message": "is turned by divine power!"
+    },
+    "description": "70% chance to turn undead creatures in a wide area."
   }
 }

@@ -24,7 +24,16 @@
         "CombatComponent": { "hp": 8, "ac": 7, "thac0": 19, "max_hp": 8, "xp_value": 0 },
         "FactionComponent": { "name": "player" },
         "StateComponent": {},
-        "ExperienceComponent": { "current_xp": 0, "level": 1 }
+        "ExperienceComponent": { "current_xp": 0, "level": 1 },
+        "AbilitiesComponent": { 
+          "abilities": [
+            "player_heal", 
+            "player_charm", 
+            "player_sleep", 
+            "player_magic_missile",
+            "player_cure_poison"
+          ] 
+        }
       }
     },
     {
