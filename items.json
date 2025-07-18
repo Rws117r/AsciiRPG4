@@ -8,9 +8,334 @@
         "RenderableComponent": { "char": "/", "color": "WHITE" },
         "DescriptionComponent": { "text": "A trusty steel sword." },
         "ItemComponent": {},
-        "MaterialComponent": { "name": "steel" }
+        "MaterialComponent": { "name": "steel" },
+        "WeaponComponent": { "damage": "1d8", "qualities": ["Melee"], "cost": 10, "weight": 60 }
       }
     },
+    {
+      "name": "Battle Axe",
+      "inherits": "Weapon",
+      "components": {
+        "PositionComponent": { "x": 2, "y": 3 },
+        "RenderableComponent": { "char": "P", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A heavy two-handed battle axe." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "steel" },
+        "WeaponComponent": { "damage": "1d8", "qualities": ["Melee", "Slow", "Two-handed"], "cost": 5, "weight": 50 }
+      }
+    },
+    {
+      "name": "Club",
+      "inherits": "Weapon",
+      "components": {
+        "PositionComponent": { "x": 3, "y": 4 },
+        "RenderableComponent": { "char": "!", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A simple wooden club." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "wood" },
+        "WeaponComponent": { "damage": "1d4", "qualities": ["Blunt", "Melee"], "cost": 10, "weight": 50 }
+      }
+    },
+    {
+      "name": "Crossbow",
+      "inherits": "Weapon",
+      "components": {
+        "PositionComponent": { "x": 4, "y": 5 },
+        "RenderableComponent": { "char": "}", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A mechanical crossbow." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "wood" },
+        "WeaponComponent": { 
+          "damage": "1d6", 
+          "qualities": ["Missile", "Reload", "Slow", "Two-handed"], 
+          "range": {"short": 80, "medium": 160, "long": 240},
+          "cost": 25, 
+          "weight": 50 
+        }
+      }
+    },
+    {
+      "name": "Dagger",
+      "inherits": "Weapon",
+      "components": {
+        "PositionComponent": { "x": 5, "y": 6 },
+        "RenderableComponent": { "char": "-", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A sharp steel dagger." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "steel" },
+        "WeaponComponent": { 
+          "damage": "1d4", 
+          "qualities": ["Melee", "Missile"], 
+          "range": {"short": 10, "medium": 20, "long": 30},
+          "cost": 3, 
+          "weight": 10 
+        }
+      }
+    },
+    {
+      "name": "Hand Axe",
+      "inherits": "Weapon",
+      "components": {
+        "PositionComponent": { "x": 6, "y": 7 },
+        "RenderableComponent": { "char": "F", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A one-handed throwing axe." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "steel" },
+        "WeaponComponent": { 
+          "damage": "1d6", 
+          "qualities": ["Melee", "Missile"], 
+          "range": {"short": 10, "medium": 20, "long": 30},
+          "cost": 4, 
+          "weight": 25 
+        }
+      }
+    },
+    {
+      "name": "Javelin",
+      "inherits": "Weapon",
+      "components": {
+        "PositionComponent": { "x": 7, "y": 8 },
+        "RenderableComponent": { "char": "\\", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A light throwing spear." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "wood" },
+        "WeaponComponent": { 
+          "damage": "1d4", 
+          "qualities": ["Missile"], 
+          "range": {"short": 30, "medium": 60, "long": 90},
+          "cost": 1, 
+          "weight": 20 
+        }
+      }
+    },
+    {
+      "name": "Lance",
+      "inherits": "Weapon",
+      "components": {
+        "PositionComponent": { "x": 8, "y": 9 },
+        "RenderableComponent": { "char": "|", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A long cavalry lance." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "wood" },
+        "WeaponComponent": { 
+          "damage": "1d6", 
+          "qualities": ["Charge", "Melee"],
+          "cost": 6, 
+          "weight": 120 
+        }
+      }
+    },
+    {
+      "name": "Long Bow",
+      "inherits": "Weapon",
+      "components": {
+        "PositionComponent": { "x": 9, "y": 10 },
+        "RenderableComponent": { "char": ")", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A powerful longbow." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "wood" },
+        "WeaponComponent": { 
+          "damage": "1d6", 
+          "qualities": ["Missile", "Two-handed"], 
+          "range": {"short": 70, "medium": 140, "long": 210},
+          "cost": 40, 
+          "weight": 30 
+        }
+      }
+    },
+    {
+      "name": "Mace",
+      "inherits": "Weapon",
+      "components": {
+        "PositionComponent": { "x": 10, "y": 11 },
+        "RenderableComponent": { "char": "T", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A heavy mace." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "steel" },
+        "WeaponComponent": { 
+          "damage": "1d6", 
+          "qualities": ["Blunt", "Melee"],
+          "cost": 5, 
+          "weight": 30 
+        }
+      }
+    },
+    {
+      "name": "Pole Arm",
+      "inherits": "Weapon",
+      "components": {
+        "PositionComponent": { "x": 11, "y": 12 },
+        "RenderableComponent": { "char": "#", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A long polearm with a deadly blade." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "steel" },
+        "WeaponComponent": { 
+          "damage": "1d10", 
+          "qualities": ["Brace", "Melee", "Slow", "Two-handed"],
+          "cost": 7, 
+          "weight": 150 
+        }
+      }
+    },
+    {
+      "name": "Short Bow",
+      "inherits": "Weapon",
+      "components": {
+        "PositionComponent": { "x": 12, "y": 13 },
+        "RenderableComponent": { "char": ")", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A simple short bow." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "wood" },
+        "WeaponComponent": { 
+          "damage": "1d6", 
+          "qualities": ["Missile", "Two-handed"], 
+          "range": {"short": 50, "medium": 100, "long": 150},
+          "cost": 25, 
+          "weight": 20 
+        }
+      }
+    },
+    {
+      "name": "Short Sword",
+      "inherits": "Weapon",
+      "components": {
+        "PositionComponent": { "x": 13, "y": 14 },
+        "RenderableComponent": { "char": "/", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A short steel blade." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "steel" },
+        "WeaponComponent": { 
+          "damage": "1d6", 
+          "qualities": ["Melee"],
+          "cost": 7, 
+          "weight": 30 
+        }
+      }
+    },
+    {
+      "name": "Silver Dagger",
+      "inherits": "Weapon",
+      "components": {
+        "PositionComponent": { "x": 14, "y": 15 },
+        "RenderableComponent": { "char": "-", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A silver-bladed dagger." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "silver" },
+        "WeaponComponent": { 
+          "damage": "1d4", 
+          "qualities": ["Melee", "Missile"], 
+          "range": {"short": 10, "medium": 20, "long": 30},
+          "cost": 30, 
+          "weight": 10 
+        }
+      }
+    },
+    {
+      "name": "Sling",
+      "inherits": "Weapon",
+      "components": {
+        "PositionComponent": { "x": 15, "y": 16 },
+        "RenderableComponent": { "char": "=", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A leather sling." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "leather" },
+        "WeaponComponent": { 
+          "damage": "1d4", 
+          "qualities": ["Blunt", "Missile"], 
+          "range": {"short": 40, "medium": 80, "long": 160},
+          "cost": 2, 
+          "weight": 10 
+        }
+      }
+    },
+    {
+      "name": "Spear",
+      "inherits": "Weapon",
+      "components": {
+        "PositionComponent": { "x": 16, "y": 17 },
+        "RenderableComponent": { "char": "|", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A versatile spear." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "wood" },
+        "WeaponComponent": { 
+          "damage": "1d6", 
+          "qualities": ["Brace", "Melee", "Missile"], 
+          "range": {"short": 20, "medium": 40, "long": 60},
+          "cost": 1, 
+          "weight": 30 
+        }
+      }
+    },
+    {
+      "name": "Staff",
+      "inherits": "Weapon",
+      "components": {
+        "PositionComponent": { "x": 17, "y": 18 },
+        "RenderableComponent": { "char": "|", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A sturdy quarterstaff." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "wood" },
+        "WeaponComponent": { 
+          "damage": "1d4", 
+          "qualities": ["Blunt", "Melee", "Slow", "Two-handed"],
+          "cost": 2, 
+          "weight": 40 
+        }
+      }
+    },
+    {
+      "name": "Two-handed Sword",
+      "inherits": "Weapon",
+      "components": {
+        "PositionComponent": { "x": 18, "y": 19 },
+        "RenderableComponent": { "char": "/", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A massive two-handed sword." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "steel" },
+        "WeaponComponent": { 
+          "damage": "1d10", 
+          "qualities": ["Melee", "Slow", "Two-handed"],
+          "cost": 15, 
+          "weight": 100 
+        }
+      }
+    },
+    {
+      "name": "War Hammer",
+      "inherits": "Weapon",
+      "components": {
+        "PositionComponent": { "x": 19, "y": 20 },
+        "RenderableComponent": { "char": "T", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A heavy war hammer." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "steel" },
+        "WeaponComponent": { 
+          "damage": "1d6", 
+          "qualities": ["Blunt", "Melee"],
+          "cost": 5, 
+          "weight": 50 
+        }
+      }
+    },
+    {
+      "name": "Torch",
+      "inherits": "Weapon",
+      "components": {
+        "PositionComponent": { "x": 20, "y": 21 },
+        "RenderableComponent": { "char": "i", "color": "YELLOW" },
+        "DescriptionComponent": { "text": "A burning torch." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "wood" },
+        "WeaponComponent": { 
+          "damage": "1d4", 
+          "qualities": ["Melee"],
+          "cost": 1, 
+          "weight": 10 
+        },
+        "LightSourceComponent": { "radius": 6, "duration": 6 }
+      }
+    },
+
     {
       "name": "Leather Armor",
       "inherits": "Armor",
@@ -19,9 +344,48 @@
         "RenderableComponent": { "char": "[", "color": "WHITE" },
         "DescriptionComponent": { "text": "A suit of sturdy leather armor." },
         "ItemComponent": {},
-        "MaterialComponent": { "name": "leather" }
+        "MaterialComponent": { "name": "leather" },
+        "ArmorComponent": { "ac": 7, "cost": 20, "weight": 200 }
       }
     },
+    {
+      "name": "Chainmail",
+      "inherits": "Armor",
+      "components": {
+        "PositionComponent": { "x": 1, "y": 2 },
+        "RenderableComponent": { "char": "[", "color": "WHITE" },
+        "DescriptionComponent": { "text": "Interlocking metal rings." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "steel" },
+        "ArmorComponent": { "ac": 5, "cost": 40, "weight": 400 }
+      }
+    },
+    {
+      "name": "Plate Mail",
+      "inherits": "Armor",
+      "components": {
+        "PositionComponent": { "x": 2, "y": 1 },
+        "RenderableComponent": { "char": "[", "color": "WHITE" },
+        "DescriptionComponent": { "text": "Heavy plates of steel armor." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "steel" },
+        "ArmorComponent": { "ac": 3, "cost": 60, "weight": 500 }
+      }
+    },
+    {
+      "name": "Shield",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 3, "y": 2 },
+        "RenderableComponent": { "char": ")", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A sturdy shield." },
+        "ItemComponent": {},
+        "EquippableComponent": { "slot": "shield" },
+        "MaterialComponent": { "name": "wood" },
+        "ShieldComponent": { "ac_bonus": 1, "cost": 10, "weight": 100 }
+      }
+    },
+
     {
       "name": "Amulet of Protection",
       "inherits": "Amulet",
@@ -33,6 +397,510 @@
         "MaterialComponent": { "name": "gold" }
       }
     },
+
+    {
+      "name": "Backpack",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 1, "y": 1 },
+        "RenderableComponent": { "char": "(", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A sturdy backpack with two straps." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "leather" },
+        "ContainerComponent": { "capacity": 400 },
+        "EquippableComponent": { "slot": "backpack" },
+        "AdventuringGearComponent": { "cost": 5, "weight": 20 }
+      }
+    },
+    {
+      "name": "Crowbar",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 4, "y": 1 },
+        "RenderableComponent": { "char": "/", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A solid iron crowbar for forcing doors." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "steel" },
+        "ToolComponent": { "type": "prying", "bonus": 2 },
+        "AdventuringGearComponent": { "cost": 10, "weight": 30 }
+      }
+    },
+    {
+      "name": "Garlic",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 5, "y": 1 },
+        "RenderableComponent": { "char": "*", "color": "WHITE" },
+        "DescriptionComponent": { "text": "Pungent garlic bulbs." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "organic" },
+        "ConsumableComponent": { "effect": "repel_undead", "uses": 5 },
+        "AdventuringGearComponent": { "cost": 5, "weight": 1 }
+      }
+    },
+    {
+      "name": "Grappling Hook",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 6, "y": 1 },
+        "RenderableComponent": { "char": "}", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A three-pronged grappling hook." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "steel" },
+        "ToolComponent": { "type": "climbing", "bonus": 3 },
+        "AdventuringGearComponent": { "cost": 25, "weight": 40 }
+      }
+    },
+    {
+      "name": "Hammer",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 7, "y": 1 },
+        "RenderableComponent": { "char": "T", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A small construction hammer." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "steel" },
+        "ToolComponent": { "type": "construction", "bonus": 1 },
+        "AdventuringGearComponent": { "cost": 2, "weight": 20 }
+      }
+    },
+    {
+      "name": "Holy Symbol",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 8, "y": 1 },
+        "RenderableComponent": { "char": "+", "color": "YELLOW" },
+        "DescriptionComponent": { "text": "A blessed religious symbol." },
+        "ItemComponent": {},
+        "EquippableComponent": { "slot": "holy_symbol" },
+        "MaterialComponent": { "name": "silver" },
+        "HolyComponent": { "power": 1 },
+        "AdventuringGearComponent": { "cost": 25, "weight": 5 }
+      }
+    },
+    {
+      "name": "Holy Water",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 9, "y": 1 },
+        "RenderableComponent": { "char": "!", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A vial of blessed water." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "glass" },
+        "ThrowableComponent": { 
+          "damage": "1d8", 
+          "range": {"short": 10, "medium": 30, "long": 50},
+          "splash": true,
+          "target_types": ["undead"]
+        },
+        "AdventuringGearComponent": { "cost": 25, "weight": 5 }
+      }
+    },
+    {
+      "name": "Iron Spikes",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 10, "y": 1 },
+        "RenderableComponent": { "char": "|", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A dozen iron spikes." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "steel" },
+        "ToolComponent": { "type": "securing", "quantity": 12 },
+        "AdventuringGearComponent": { "cost": 1, "weight": 50 }
+      }
+    },
+    {
+      "name": "Lantern",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 11, "y": 1 },
+        "RenderableComponent": { "char": "O", "color": "YELLOW" },
+        "DescriptionComponent": { "text": "An oil-burning lantern." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "steel" },
+        "LightSourceComponent": { "radius": 6, "fuel_type": "oil", "duration": 24 },
+        "AdventuringGearComponent": { "cost": 10, "weight": 20 }
+      }
+    },
+    {
+      "name": "Mirror",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 12, "y": 1 },
+        "RenderableComponent": { "char": "0", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A hand-sized steel mirror." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "steel" },
+        "ToolComponent": { "type": "reflection", "bonus": 1 },
+        "AdventuringGearComponent": { "cost": 5, "weight": 5 }
+      }
+    },
+    {
+      "name": "Oil Flask",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 13, "y": 1 },
+        "RenderableComponent": { "char": "!", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A flask of lamp oil." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "glass" },
+        "ConsumableComponent": { "effect": "fuel", "uses": 1 },
+        "ThrowableComponent": { 
+          "damage": "1d8", 
+          "range": {"short": 10, "medium": 30, "long": 50},
+          "splash": true,
+          "fire_damage": true
+        },
+        "AdventuringGearComponent": { "cost": 2, "weight": 10 }
+      }
+    },
+    {
+      "name": "Pole",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 14, "y": 1 },
+        "RenderableComponent": { "char": "|", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A 10-foot wooden pole." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "wood" },
+        "ToolComponent": { "type": "probing", "reach": 10 },
+        "AdventuringGearComponent": { "cost": 1, "weight": 80 }
+      }
+    },
+    {
+      "name": "Iron Rations",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 15, "y": 1 },
+        "RenderableComponent": { "char": "%", "color": "WHITE" },
+        "DescriptionComponent": { "text": "Preserved travel rations (7 days)." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "organic" },
+        "ConsumableComponent": { "effect": "nutrition", "uses": 7 },
+        "AdventuringGearComponent": { "cost": 15, "weight": 70 }
+      }
+    },
+    {
+      "name": "Standard Rations",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 16, "y": 1 },
+        "RenderableComponent": { "char": "%", "color": "WHITE" },
+        "DescriptionComponent": { "text": "Fresh food rations (7 days)." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "organic" },
+        "ConsumableComponent": { "effect": "nutrition", "uses": 7, "spoilage": 14 },
+        "AdventuringGearComponent": { "cost": 5, "weight": 200 }
+      }
+    },
+    {
+      "name": "Rope",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 17, "y": 1 },
+        "RenderableComponent": { "char": "~", "color": "WHITE" },
+        "DescriptionComponent": { "text": "50 feet of sturdy rope." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "hemp" },
+        "ToolComponent": { "type": "climbing", "length": 50, "capacity": 3 },
+        "AdventuringGearComponent": { "cost": 1, "weight": 20 }
+      }
+    },
+    {
+      "name": "Large Sack",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 18, "y": 1 },
+        "RenderableComponent": { "char": "(", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A large cloth sack." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "cloth" },
+        "ContainerComponent": { "capacity": 600 },
+        "AdventuringGearComponent": { "cost": 2, "weight": 5 }
+      }
+    },
+    {
+      "name": "Small Sack",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 19, "y": 1 },
+        "RenderableComponent": { "char": "(", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A small cloth sack." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "cloth" },
+        "ContainerComponent": { "capacity": 200 },
+        "AdventuringGearComponent": { "cost": 1, "weight": 2 }
+      }
+    },
+    {
+      "name": "Stakes and Mallet",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 20, "y": 1 },
+        "RenderableComponent": { "char": "T", "color": "WHITE" },
+        "DescriptionComponent": { "text": "Wooden stakes and mallet for vampires." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "wood" },
+        "ToolComponent": { "type": "vampire_hunting", "quantity": 3 },
+        "AdventuringGearComponent": { "cost": 3, "weight": 30 }
+      }
+    },
+    {
+      "name": "Thieves' Tools",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 1, "y": 3 },
+        "RenderableComponent": { "char": "&", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A kit for picking locks." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "steel" },
+        "ToolComponent": { "type": "lockpicking", "bonus": 3 },
+        "AdventuringGearComponent": { "cost": 25, "weight": 10 }
+      }
+    },
+    {
+      "name": "Tinder Box",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 2, "y": 3 },
+        "RenderableComponent": { "char": "=", "color": "WHITE" },
+        "DescriptionComponent": { "text": "Flint and steel for making fire." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "steel" },
+        "ToolComponent": { "type": "fire_starting", "success_chance": 2 },
+        "AdventuringGearComponent": { "cost": 3, "weight": 5 }
+      }
+    },
+    {
+      "name": "Waterskin",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 4, "y": 3 },
+        "RenderableComponent": { "char": "}", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A hide container for water." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "leather" },
+        "ContainerComponent": { "capacity": 2, "liquid": true },
+        "AdventuringGearComponent": { "cost": 1, "weight": 40 }
+      }
+    },
+    {
+      "name": "Wine",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 5, "y": 3 },
+        "RenderableComponent": { "char": "!", "color": "WHITE" },
+        "DescriptionComponent": { "text": "Two pints of wine." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "glass" },
+        "ConsumableComponent": { "effect": "alcohol", "uses": 2 },
+        "AdventuringGearComponent": { "cost": 1, "weight": 30 }
+      }
+    },
+    {
+      "name": "Wolfsbane",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 6, "y": 3 },
+        "RenderableComponent": { "char": "*", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A bunch of wolfsbane herb." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "organic" },
+        "ConsumableComponent": { "effect": "repel_lycanthrope", "uses": 3 },
+        "AdventuringGearComponent": { "cost": 10, "weight": 1 }
+      }
+    },
+
+    {
+      "name": "Arrows",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 7, "y": 3 },
+        "RenderableComponent": { "char": "\\", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A quiver of 20 arrows." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "wood" },
+        "AmmunitionComponent": { "type": "arrow", "quantity": 20, "weapon_types": ["bow"] },
+        "AdventuringGearComponent": { "cost": 5, "weight": 30 }
+      }
+    },
+    {
+      "name": "Crossbow Bolts",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 8, "y": 3 },
+        "RenderableComponent": { "char": "\\", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A case of 30 crossbow bolts." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "wood" },
+        "AmmunitionComponent": { "type": "bolt", "quantity": 30, "weapon_types": ["crossbow"] },
+        "AdventuringGearComponent": { "cost": 10, "weight": 50 }
+      }
+    },
+    {
+      "name": "Silver-Tipped Arrow",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 9, "y": 3 },
+        "RenderableComponent": { "char": "\\", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A single silver-tipped arrow." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "silver" },
+        "AmmunitionComponent": { "type": "silver_arrow", "quantity": 1, "weapon_types": ["bow"], "special": "silver" },
+        "AdventuringGearComponent": { "cost": 5, "weight": 1 }
+      }
+    },
+    {
+      "name": "Sling Stones",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 10, "y": 3 },
+        "RenderableComponent": { "char": "*", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A pouch of sling stones." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "stone" },
+        "AmmunitionComponent": { "type": "stone", "quantity": 30, "weapon_types": ["sling"] },
+        "AdventuringGearComponent": { "cost": 1, "weight": 50 }
+      }
+    },
+
+    {
+      "name": "Bloodstream Poison I",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 11, "y": 3 },
+        "RenderableComponent": { "char": "!", "color": "GREEN" },
+        "DescriptionComponent": { "text": "A vial of weak poison." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "glass" },
+        "PoisonComponent": { 
+          "type": "bloodstream",
+          "save_modifier": 6,
+          "detection_chance": 0.8,
+          "onset_time": "1d4+1",
+          "damage": 15,
+          "lethal": false
+        },
+        "AdventuringGearComponent": { "cost": 10, "weight": 1 }
+      }
+    },
+    {
+      "name": "Bloodstream Poison II",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 12, "y": 3 },
+        "RenderableComponent": { "char": "!", "color": "GREEN" },
+        "DescriptionComponent": { "text": "A vial of moderate poison." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "glass" },
+        "PoisonComponent": { 
+          "type": "bloodstream",
+          "save_modifier": 5,
+          "detection_chance": 0.65,
+          "onset_time": "1d3",
+          "damage": 25,
+          "lethal": false
+        },
+        "AdventuringGearComponent": { "cost": 75, "weight": 1 }
+      }
+    },
+    {
+      "name": "Bloodstream Poison III",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 13, "y": 3 },
+        "RenderableComponent": { "char": "!", "color": "GREEN" },
+        "DescriptionComponent": { "text": "A vial of strong poison." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "glass" },
+        "PoisonComponent": { 
+          "type": "bloodstream",
+          "save_modifier": 4,
+          "detection_chance": 0.4,
+          "onset_time": "1",
+          "damage": 35,
+          "lethal": false
+        },
+        "AdventuringGearComponent": { "cost": 600, "weight": 1 }
+      }
+    },
+    {
+      "name": "Bloodstream Poison IV",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 14, "y": 3 },
+        "RenderableComponent": { "char": "!", "color": "GREEN" },
+        "DescriptionComponent": { "text": "A vial of lethal poison." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "glass" },
+        "PoisonComponent": { 
+          "type": "bloodstream",
+          "save_modifier": 3,
+          "detection_chance": 0.15,
+          "onset_time": "instant",
+          "damage": 0,
+          "lethal": true
+        },
+        "AdventuringGearComponent": { "cost": 1500, "weight": 1 }
+      }
+    },
+    {
+      "name": "Ingested Poison I",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 15, "y": 3 },
+        "RenderableComponent": { "char": "!", "color": "GREEN" },
+        "DescriptionComponent": { "text": "A vial of weak ingested poison." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "glass" },
+        "PoisonComponent": { 
+          "type": "ingested",
+          "save_modifier": 6,
+          "detection_chance": 0.8,
+          "onset_time": "2d4",
+          "damage_success": 10,
+          "damage_fail": 20,
+          "lethal": false
+        },
+        "AdventuringGearComponent": { "cost": 5, "weight": 1 }
+      }
+    },
+    {
+      "name": "Ingested Poison V",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 16, "y": 3 },
+        "RenderableComponent": { "char": "!", "color": "GREEN" },
+        "DescriptionComponent": { "text": "A vial of deadly ingested poison." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "glass" },
+        "PoisonComponent": { 
+          "type": "ingested",
+          "save_modifier": 2,
+          "detection_chance": 0.0,
+          "onset_time": "1d4",
+          "damage_success": 30,
+          "damage_fail": 0,
+          "lethal": true
+        },
+        "AdventuringGearComponent": { "cost": 1000, "weight": 1 }
+      }
+    },
+
+    {
+      "name": "Healing Potion",
+      "inherits": "Item",
+      "components": {
+        "PositionComponent": { "x": 17, "y": 3 },
+        "RenderableComponent": { "char": "!", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A magical healing potion." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "glass" },
+        "ConsumableComponent": { "effect": "heal", "healing": "2d4+2", "uses": 1 },
+        "AdventuringGearComponent": { "cost": 100, "weight": 5 }
+      }
+    },
+
     {
       "name": "Wooden Door",
       "inherits": "Door",
@@ -44,4 +912,17 @@
       }
     }
   ]
-}
+}{
+  "entities": [
+    {
+      "name": "Steel Sword",
+      "inherits": "Weapon",
+      "components": {
+        "PositionComponent": { "x": 7, "y": 7 },
+        "RenderableComponent": { "char": "/", "color": "WHITE" },
+        "DescriptionComponent": { "text": "A trusty steel sword." },
+        "ItemComponent": {},
+        "MaterialComponent": { "name": "steel" },
+        "WeaponComponent": { "damage": "1d8", "qualities": ["Melee"] }
+      }
+    }

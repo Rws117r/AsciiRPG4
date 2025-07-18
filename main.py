@@ -8,8 +8,11 @@ import json
 import copy
 import random
 import components
-import factory
-from systems import InputSystem, MovementSystem, RenderSystem, ActionSystem, CombatSystem, AISystem, StatusEffectSystem, SavingThrowSystem
+import factory # Make sure factory is imported
+from core_systems import InputSystem, MovementSystem, ActionSystem
+from combat_systems import SavingThrowSystem, AbilitySystem, CombatSystem
+from status_systems import StatusEffectSystem
+from render_system import RenderSystem
 
 # --- Core ECS Classes ---
 class Entity:
@@ -260,8 +263,9 @@ class Game:
         self.world.add_system(InputSystem(self.world))
         self.world.add_system(MovementSystem(self.world))
         self.world.add_system(ActionSystem(self.world))
+        self.world.add_system(AbilitySystem(self.world))  # Add the new AbilitySystem
         self.world.add_system(SavingThrowSystem(self.world))  # Add saving throw system
-        self.world.add_system(AISystem(self.world))
+        from systems import AISystem # Explicitly import AISystem here
         self.world.add_system(CombatSystem(self.world))
         self.world.add_system(StatusEffectSystem(self.world))  # Add status effect system
         self.world.add_system(RenderSystem(self.world, self.screen, self.font, self.TILE_SIZE))
@@ -413,12 +417,13 @@ class Game:
             render_system = self.world.get_system(RenderSystem)
             if render_system:
                 render_system.update(game_state=self)
-            
+
             pygame.display.flip()
             self.clock.tick(self.FPS)
 
         pygame.quit()
         sys.exit()
+
 
 if __name__ == '__main__':
     game = Game()
